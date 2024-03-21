@@ -7,3 +7,4 @@ tshark_duration: 7210
 pps: 5pps
 trex_duration: 7200 # 2h
 payload_size: 16
+sample_prob: 1.0

@@ -9,3 +9,4 @@ tshark_duration: 610
 pps: 1500pps # 5000pps capped at 1500 to limit total packet amount before sampling is implemented
 trex_duration: 600  # 10 min
 payload_size: 16
+sample_prob: 1.0

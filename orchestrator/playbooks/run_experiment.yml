@@ -27,7 +27,7 @@
 
     - name: Start tshark
       args:
-        chdir: /home/shared/code/packetCapturer
+        chdir: /home/shared/benchmarking_tool/packetCapturer
       command: "tshark -f '(host 192.168.2.111) or (ether[78:2] = 0x1f40 and ether[80:2] = 0x2328)' -i {{ interface1 }} -i {{ interface2 }} -a duration:{{ tshark_duration }} -w /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng" # TODO: fix filter
       async: "{{ (tshark_duration+30)|int|abs }}"
       poll: 0
@@ -66,8 +66,8 @@
 
     - name: Run Go script
       args:
-        chdir: /home/shared/code/packetCapturer
-      shell: "sudo go run /home/shared/code/packetCapturer/packetParserWithInflux2.go /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng {{ trial_name }}"
+        chdir: /home/shared/benchmarking_tool/packetCapturer
+      shell: "sudo go run /home/shared/benchmarking_tool/packetCapturer/packetParserWithInflux2.go -s /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -t {{ trial_name }} -p {{ sample_prob }}"
       register: go_script_output
 
     - name: Print Go script output
@@ -77,13 +77,13 @@
     - name: Copy cpu.pprof for the experiment
       shell: " {{ item }}"
       with_items: 
-        - "sudo cp -f /home/shared/code/packetCapturer/cpu.pprof /home/shared/output_files/performance/packetCapturer/{{ trial_name }}_cpu.pprof"
-        - "sudo cp -f /home/shared/code/packetCapturer/memory.pprof /home/shared/output_files/performance/packetCapturer/{{ trial_name }}_memory.pprof"
+        - "sudo cp -f /home/shared/benchmarking_tool/packetCapturer/cpu.pprof /home/shared/output_files/performance/packetCapturer/{{ trial_name }}_cpu.pprof"
+        - "sudo cp -f /home/shared/benchmarking_tool/packetCapturer/memory.pprof /home/shared/output_files/performance/packetCapturer/{{ trial_name }}_memory.pprof"
 
     - name: Run analytics
       args:
-        chdir: /home/shared/code/packetAnalyser
-      shell: "sudo python3 /home/shared/code/packetAnalyser/src/orchestrator.py -s  {{ trial_name }} -d {{ trial_name }}_analysis"
+        chdir: /home/shared/benchmarking_tool/packetAnalyser
+      shell: "sudo python3 /home/shared/benchmarking_tool/packetAnalyser/src/orchestrator.py -s  {{ trial_name }} -d {{ trial_name }}_analysis"
       register: analytics_output
 
     - name: Kill t-rex process

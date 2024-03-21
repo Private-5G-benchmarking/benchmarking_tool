@@ -1,8 +1,8 @@
 # vars.yml
 interface1: enp3s0
-interface2: enp1s0f1
+interface2: enp1s0f0
 trial_name: replay_1
+replay_file: /home/sebastfu/waqas-cleaned-udp2.pcapng
 tshark_duration: 65
 tcpreplay_duration: 65
-pps: 1000pps
-loops: 10
+sample_prob: 1.0
