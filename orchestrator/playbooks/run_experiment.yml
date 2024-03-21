@@ -1,0 +1,91 @@
+---
+# Run with ansible-playbook playbook_name.yml --extra-vars "@file_path_to_vars_file"
+- name: Run experiments
+  become: true
+  hosts: localhost
+
+  tasks:
+
+    - name: Purge Influx measurements with same trial name
+      become: yes
+      shell: "sudo influx delete --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking --bucket 5gbenchmarking --start '1970-01-01T00:00:00Z' --stop '2100-01-01T00:00:00Z' --predicate '_measurement={{ trial_name }}'"
+
+    - name: Start Trex server
+      become: yes
+      command: nohup /opt/trex/v3.04/t-rex-64 -i > /dev/null 2>&1 &
+      args:
+        chdir: /opt/trex/v3.04
+      async: "{{ (trex_duration*2)|int|abs }}" 
+      poll: 0
+      register: trex_server
+      delegate_to: 129.241.200.231
+    
+    - name: Pause to wait for TRex server
+      ansible.builtin.pause:
+        prompt: "Pausing..."
+        seconds: "30" # add this to wait for the trex server to start before generating traffic 
+
+    - name: Start tshark
+      args:
+        chdir: /home/shared/code/packetCapturer
+      command: "tshark -f '(host 192.168.2.111) or (ether[78:2] = 0x1f40 and ether[80:2] = 0x2328)' -i {{ interface1 }} -i {{ interface2 }} -a duration:{{ tshark_duration }} -w /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng" # TODO: fix filter
+      async: "{{ (tshark_duration+30)|int|abs }}"
+      poll: 0
+      register: tshark
+
+    - name: Generate traffic
+      become: yes
+      async: "{{ (trex_duration+30)|int|abs }}" 
+      poll: 0 # start the task in the background and move on to the next task without waiting for completion
+      shell: python3 /opt/trex/v3.04/automation/trex_control_plane/interactive/trex/examples/stl/my-automation-test.py -m {{ pps }} -d {{ trex_duration }} --payload_size {{ payload_size }}
+      register: traffgen_output
+      delegate_to: 129.241.200.231
+
+    - name: Wait for tshark to complete
+      async_status:
+        jid: "{{ tshark.ansible_job_id }}"
+      register: tshark_result
+      until: tshark_result.finished
+      retries: 1000
+      delay: 30
+
+    - name: Check for corrupt packets
+      shell: pcapfix -n -o /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng # TODO: filename
+
+    - name: Check if fixed pcap exists
+      stat:
+        path: /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng # TODO: filename
+      register: stat_result
+
+    - name: Rename corrupt and fixed pcap-files 
+      shell: "{{ item }}"
+      with_items:
+        - "mv /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng /opt/hallo/output_files/pcaps/CORRUPT_{{ trial_name }}.pcapng"
+        - "mv /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng"
+      when: stat_result.stat.exists
+
+    - name: Run Go script
+      args:
+        chdir: /home/shared/code/packetCapturer
+      shell: "sudo go run /home/shared/code/packetCapturer/packetParserWithInflux2.go /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng {{ trial_name }}"
+      register: go_script_output
+
+    - name: Print Go script output
+      debug:
+        var: go_script_output.stdout_lines
+    
+    - name: Copy cpu.pprof for the experiment
+      shell: " {{ item }}"
+      with_items: 
+        - "sudo cp -f /home/shared/code/packetCapturer/cpu.pprof /home/shared/output_files/performance/packetCapturer/{{ trial_name }}_cpu.pprof"
+        - "sudo cp -f /home/shared/code/packetCapturer/memory.pprof /home/shared/output_files/performance/packetCapturer/{{ trial_name }}_memory.pprof"
+
+    - name: Run analytics
+      args:
+        chdir: /home/shared/code/packetAnalyser
+      shell: "sudo python3 /home/shared/code/packetAnalyser/src/orchestrator.py -s  {{ trial_name }} -d {{ trial_name }}_analysis"
+      register: analytics_output
+
+    - name: Kill t-rex process
+      command: "pkill t-rex-64"
+      delegate_to: 129.241.200.231

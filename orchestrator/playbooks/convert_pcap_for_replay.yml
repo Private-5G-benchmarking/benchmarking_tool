@@ -1,0 +1,11 @@
+---
+# Run with ansible-playbook playbook_name.yml --extra-vars "@file_path_to_vars_file"
+- name: Convert pcap to generic udp pcp
+  become: true
+  hosts: localhost
+
+  tasks:
+
+    - name: Convert pcap
+      become: yes
+      shell: ""

@@ -1,0 +1,9 @@
+# vars.yml
+interface1: enp3s0
+interface2: enp1s0f1
+trial_name: cbr_high_bw_low_dur_low_pl
+# packet_amount: 10000000 #TODO
+tshark_duration: 70
+pps: 17000pps
+trex_duration: 60  # 1 min
+payload_size: 16
