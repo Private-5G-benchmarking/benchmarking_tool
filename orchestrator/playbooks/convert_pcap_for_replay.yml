@@ -6,6 +6,15 @@
 
   tasks:
 
+    - name: Remove existing pcap
+      become: yes
+      shell: "rm {{ output_file }}"
+
     - name: Convert pcap
       become: yes
-      shell: ""
+      shell: "sudo python3 /home/sebastfu/benchmarking_tool/utils/generate_udp_pcap_based_on_old_pcap.py -old_src_ip {{ old_src_ip}} -old_dst_ip {{ old_dst_ip }} -new_src_ip {{ new_src_ip }} -new_dst_ip {{ new_dst_ip }} -new_sport {{ new_sport }} -new_dport {{ new_dport }}  -i {{ input_file }} -o {{ output_file }}  "
+      register: conversion_output
+
+    - name: Print result
+      debug:
+        var: conversion_output.stdout_lines

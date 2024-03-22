@@ -14,7 +14,7 @@
     - name: Start tshark
       args:
         chdir: /home/shared/benchmarking_tool/packetCapturer
-      command: "tshark -i {{ interface1 }} -i {{ interface2 }} -f 'ether[78:2]==0x270f and ether[80:2]==0x1b59' -a duration:{{ tshark_duration }} -w /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng" # TODO: fix filter
+      command: "tshark -i {{ interface1 }} -i {{ interface2 }} -f '{{ filter }}' -a duration:{{ tshark_duration }} -w /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng"
       async: "{{ (tshark_duration+30)|int|abs }}"
       poll: 0
       register: tshark
