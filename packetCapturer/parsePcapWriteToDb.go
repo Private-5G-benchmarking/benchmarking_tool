@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"runtime/pprof"
+	"strconv"
 	"strings"
 	"time"
 
@@ -81,10 +82,19 @@ func getSequenceNr(packet gopacket.Packet) string {
 			gtpPayload := gtpPacket.Payload
 			testPacket := gopacket.NewPacket(gtpPayload, layers.LayerTypeIPv4, gopacket.Default)
 			testUdpLayer := testPacket.Layer(layers.LayerTypeUDP)
-			testUdpPacket, _ := testUdpLayer.(*layers.UDP)
-			testpayload := testUdpPacket.Payload
-			sequence_number = string(testpayload[0:8])
+			if testUdpLayer != nil {
+				testUdpPacket, _ := testUdpLayer.(*layers.UDP)
+				testpayload := testUdpPacket.Payload
+				sequence_number = string(testpayload[0:8])
+			}
+			testTcpLayer := testPacket.Layer(layers.LayerTypeTCP)
+			if testTcpLayer != nil {
+				testTcpPacket, _ := testTcpLayer.(*layers.TCP)
+				sequence_number = strconv.FormatUint(uint64(testTcpPacket.Seq), 10)
+			}
+
 		}
+
 	}
 	return sequence_number
 }
@@ -229,7 +239,7 @@ func main() {
 	for packet := range packetSource.Packets() {
 		if packet.ErrorLayer() != nil {
 			// Handle the error
-			fmt.Println("Error decoding packet:", packet.ErrorLayer().Error())
+			// fmt.Println("Error decoding packet:", packet.ErrorLayer().Error())
 			continue // Skip to the next packet
 		}
 		totalNrPackets++
