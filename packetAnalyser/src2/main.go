@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -15,10 +16,13 @@ type Packet struct {
 	dstip              string
 	psize              int
 	encapsulated_psize int
-	rx_ts              time.Time
-	tx_ts              time.Time
+	rx_ts              int64
+	tx_ts              int64
 }
 
+// ParsePcapToPacketSlice accepts an io.Reader object which it expects is
+// connected to a .csv-file with information to be formed into the Packet
+// struct.
 func ParsePcapToPacketSlice(r io.Reader) ([]*Packet, error) {
 	reader := csv.NewReader(r)
 	layout := "2006-01-02 15:04:05.999999999 -0700 MST"
@@ -63,23 +67,39 @@ func ParsePcapToPacketSlice(r io.Reader) ([]*Packet, error) {
 			// log.Fatal("Error parsing rx timestamp")
 			return packets, err
 		}
-		fmt.Println(rx_timestamp)
 		tx_timestamp, err := time.Parse(layout, tx_ts)
 		if err != nil {
 			// log.Fatal("Error parsing tx timestamp")
 			return packets, err
 		}
 
-		packet := Packet{srcip, dstip, psize_int, encapsulated_psize_int, rx_timestamp, tx_timestamp}
+		packet := Packet{srcip, dstip, psize_int, encapsulated_psize_int, rx_timestamp.UnixNano(), tx_timestamp.UnixNano()}
 		packets = append(packets, &packet)
 	}
 
 	return packets, nil
 }
 
+// SortPackets sorts a slice of Packets on either their rx ts or ts tx.
+// It does so in place, and in ascending order.
+func SortPackets(packets []*Packet, on_rx bool) {
+	var less func(i, j int) bool
+	if on_rx {
+		less = func(i, j int) bool {
+			return packets[i].rx_ts-packets[j].rx_ts <= 0
+		}
+	} else {
+		less = func(i, j int) bool {
+			return packets[i].tx_ts-packets[j].tx_ts <= 0
+		}
+	}
+
+	sort.Slice(packets, less)
+}
+
 func main() {
 	p_in := `srcip,dstip,psize,encapsulated_psize,rx_ts,tx_ts
-8.8.8.8,8.8.8.9,56,104,2024-03-12 14:20:03.824593711 +0000 UTC,2024-03-12 14:20:03.824624512 +0000 UTC
+8.8.8.8,8.8.8.9,58,104,2024-03-12 14:20:03.824593711 +0000 UTC,2024-03-12 14:20:03.824624512 +0000 UTC
 8.8.8.8,8.8.8.9,56,104,2024-03-12 14:20:03.824596771 +0000 UTC,2024-03-12 14:20:03.833596771 +0000 UTC`
 
 	packets, err := ParsePcapToPacketSlice(strings.NewReader(p_in))
@@ -91,5 +111,13 @@ func main() {
 	for index, packet := range packets {
 		fmt.Print(index, ": ")
 		fmt.Print(*packet, "\n")
+	}
+
+	SortPackets(packets, true)
+
+	for index, packet := range packets {
+		fmt.Print(index, ": ")
+		fmt.Print(*packet, "\n")
+
 	}
 }
