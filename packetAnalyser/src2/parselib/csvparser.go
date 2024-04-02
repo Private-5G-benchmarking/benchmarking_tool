@@ -51,23 +51,19 @@ func ParsePcapToPacketSlice(r io.Reader) ([]*Packet, error) {
 
 		psize_int, err := strconv.Atoi(psize)
 		if err != nil {
-			// log.Fatal("Error parsing variable psize")
 			return packets, err
 		}
 		encapsulated_psize_int, err := strconv.Atoi(encapsulated_psize)
 		if err != nil {
-			// log.Fatal("Error parsing variable encapsulated_psize")
 			return packets, err
 		}
 
 		rx_timestamp, err := time.Parse(layout, rx_ts)
 		if err != nil {
-			// log.Fatal("Error parsing rx timestamp")
 			return packets, err
 		}
 		tx_timestamp, err := time.Parse(layout, tx_ts)
 		if err != nil {
-			// log.Fatal("Error parsing tx timestamp")
 			return packets, err
 		}
 

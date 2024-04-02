@@ -33,24 +33,30 @@ func SortPackets(packets []*parselib.Packet, on_rx bool) {
 	sort.Slice(packets, less)
 }
 
-func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, writeAPI api.WriteAPI, measurementName string) {
-	owd, owd_error := calculatorlib.CalculateOneWayDelay(packets)
-	iat, iat_error := calculatorlib.CalculateInterArrivalTime(packets)
-	ipdv, ipdv_error := calculatorlib.CalculateJitter(packets)
+func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, calculatorMap calculatorlib.CalculatorMap, writeAPI api.WriteAPI, measurementName string) {
+	valueMap := make(map[string][]float64)
 
-	if owd_error != nil || iat_error != nil || ipdv_error != nil {
-		fmt.Println("Error occured! Returning...")
-		return
+	for kpiName, fn := range calculatorMap {
+		values, error := fn(packets)
+
+		if error != nil {
+			fmt.Println("Error occured! Returning...")
+			return
+		}
+
+		valueMap[kpiName] = values
 	}
 
 	for index, packet := range packets {
-		nsec := int64(packet.Tx_ts)
-		nnanosec := int64(math.Mod(packet.Tx_ts, 1) * math.Pow10(9))
-		point := influxdb2.NewPointWithMeasurement(measurementName).
-			AddField("packet_owd", owd[index]).
-			AddField("packet_interarrival_time", iat[index]).
-			AddField("packet_jitter", ipdv[index]).
-			SetTime(time.Unix(nsec, nnanosec))
+		numSec := int64(packet.Tx_ts)
+		numNanosec := int64(math.Mod(packet.Tx_ts, 1) * math.Pow10(9))
+		point := influxdb2.NewPointWithMeasurement(measurementName)
+
+		for kpiName, kpi_values := range valueMap {
+			point = point.AddField(kpiName, kpi_values[index])
+		}
+
+		point = point.SetTime(time.Unix(numSec, numNanosec))
 
 		writeAPI.WritePoint(point)
 	}
@@ -84,5 +90,5 @@ func main() {
 	bucket := "5gbenchmarking"
 	writeAPI := client.WriteAPI(org, bucket)
 
-	calculatePerPacketKPIsAndWriteToInflux(packets, writeAPI, measurementName)
+	calculatePerPacketKPIsAndWriteToInflux(packets, calculatorlib.GetCalculatorMap(), writeAPI, measurementName)
 }

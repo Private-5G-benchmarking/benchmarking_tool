@@ -35,7 +35,7 @@ func CalculateInterArrivalTime(packets []*parselib.Packet) ([]float64, error) {
 }
 
 // CalculateJitter (CalculateIPDV) accepts an array of Packets and calculates
-// the IPDV on the transmit timestamp (Tx_ts) for each packet according to
+// the IPDV for each packet according to
 // RFC 3393. It returns the IPDVs in seconds.
 func CalculateJitter(packets []*parselib.Packet) ([]float64, error) {
 	jitters := make([]float64, len(packets))
@@ -57,4 +57,16 @@ func CalculateJitter(packets []*parselib.Packet) ([]float64, error) {
 	}
 
 	return jitters, nil
+}
+
+type CalculatorMap map[string]func([]*parselib.Packet) ([]float64, error)
+
+func GetCalculatorMap() CalculatorMap {
+	m := make(CalculatorMap)
+
+	m["packet_owd"] = CalculateOneWayDelay
+	m["packet_interarrival_time"] = CalculateInterArrivalTime
+	m["packet_jitter"] = CalculateJitter
+
+	return m
 }
