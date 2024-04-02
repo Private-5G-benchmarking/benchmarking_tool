@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"packetCapturer/influxlib"
+	"packetCapturer/matchlib"
 	"packetCapturer/profilinglib"
 	"packetCapturer/samplelib"
 	"packetCapturer/slidingwindowlib"
@@ -44,7 +45,6 @@ func checkIfRelevantPacket(packet gopacket.Packet) bool {
 			return false
 		}
 		return true
-
 	} else {
 		ipLayer := packet.Layer(layers.LayerTypeIPv4)
 		ipPacket, _ := ipLayer.(*layers.IPv4)
@@ -58,24 +58,17 @@ func checkIfRelevantPacket(packet gopacket.Packet) bool {
 	return false
 }
 
-func isPacketMatch(parsedPacket map[string]interface{}, p map[string]interface{}) bool {
-	//This is extracted into its own function to make it easier later
-	slidingWindowSnr, slidingWindowPayloadExists := p["sequence_nr"].(string)
-	if slidingWindowPayloadExists && parsedPacket["sequence_nr"] == slidingWindowSnr {
-		return true
-	}
-	return false
-}
-
 func main() {
 	// Setup flag
 	var pcap_loc string
 	var dest_measurement string
 	var sample_prob float64
+	var traffic_type string
 
 	flag.StringVar(&pcap_loc, "s", "", "Provide a file path for the capture file (.pcap(ng))")
 	flag.StringVar(&dest_measurement, "t", "", "Provide a name for the destination measurement table in Influx")
 	flag.Float64Var(&sample_prob, "p", 1.0, "Provide a sample probability for writing a packet to Influx")
+	flag.StringVar(&traffic_type, "traf", "udp", "Provide a transport layer protocol to get sequence number for matching")
 
 	flag.Parse()
 
@@ -123,6 +116,9 @@ func main() {
 
 	// Creating a list of mixed maps
 	slidingWindow := make([]map[string]interface{}, 0)
+	irrelevantNrPackets := 0
+	nrOfMatchedPackets := 0
+
 	// Iterate through each packet in the pcap file
 	for packet := range packetSource.Packets() {
 		if packet.ErrorLayer() != nil {
@@ -134,15 +130,16 @@ func main() {
 
 		ipLayer := packet.Layer(layers.LayerTypeIPv4)
 		if !checkIfRelevantPacket(packet) || ipLayer == nil {
+			irrelevantNrPackets ++
 			continue
 		}
 
-		parsedPacket := influxlib.ProcessPacketToInfluxPoint(packet)
+		parsedPacket := influxlib.ProcessPacketToInfluxPoint(packet, traffic_type)
 
 		matchFound := false
 
 		for index, p := range slidingWindow {
-			if isPacketMatch(parsedPacket, p) {
+			if matchlib.IsPacketMatchSequenceNr(parsedPacket, p) {
 				sample := samplelib.Sample(cdf)
 
 				if sample == 1 {
@@ -152,6 +149,7 @@ func main() {
 
 				slidingWindow = removeFromSlice(slidingWindow, index)
 				matchFound = true
+				nrOfMatchedPackets ++
 				break
 			}
 		}
@@ -185,4 +183,6 @@ func main() {
 	fmt.Printf("Script took %s to run.\n", duration)
 	fmt.Printf("%d rows written to InfluxDB.\n", rowCount)
 	fmt.Printf("%d The total number of packets in pcap is \n", totalNrPackets)
+	fmt.Printf("%d The irrelevant number of packets in pcap is \n", irrelevantNrPackets)
+	fmt.Printf("%d The matched number of packets in pcap is \n", nrOfMatchedPackets)
 }
