@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"math"
@@ -56,6 +57,12 @@ func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, writeAPI
 }
 
 func main() {
+	var measurementName string
+
+	flag.StringVar(&measurementName, "m", "test", "Provide an Influx measurement name")
+
+	flag.Parse()
+
 	p_in := `srcip,dstip,psize,encapsulated_psize,rx_ts,tx_ts
 8.8.8.8,8.8.8.9,58,104,2024-03-12 14:20:03.824793711 +0000 UTC,2024-03-12 14:20:03.824624512 +0000 UTC
 8.8.8.8,8.8.8.9,56,104,2024-03-12 14:20:03.824796771 +0000 UTC,2024-03-12 14:20:03.833596771 +0000 UTC`
@@ -77,5 +84,5 @@ func main() {
 	bucket := "5gbenchmarking"
 	writeAPI := client.WriteAPI(org, bucket)
 
-	calculatePerPacketKPIsAndWriteToInflux(packets, writeAPI, "mandag")
+	calculatePerPacketKPIsAndWriteToInflux(packets, writeAPI, measurementName)
 }
