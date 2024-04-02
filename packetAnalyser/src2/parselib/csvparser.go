@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"io"
 	"log"
+	"math"
 	"strconv"
 	"time"
 )
@@ -13,8 +14,8 @@ type Packet struct {
 	Dstip              string
 	Psize              int
 	Encapsulated_psize int
-	Rx_ts              int64
-	Tx_ts              int64
+	Rx_ts              float64 // Format: seconds with nanosecond precision
+	Tx_ts              float64 // Format: seconds with nanosecond precision
 }
 
 // ParsePcapToPacketSlice accepts an io.Reader object which it expects is
@@ -70,9 +71,13 @@ func ParsePcapToPacketSlice(r io.Reader) ([]*Packet, error) {
 			return packets, err
 		}
 
-		packet := Packet{srcip, dstip, psize_int, encapsulated_psize_int, rx_timestamp.UnixNano(), tx_timestamp.UnixNano()}
+		packet := Packet{srcip, dstip, psize_int, encapsulated_psize_int, convertNanosecondsToSeconds(rx_timestamp.UnixNano()), convertNanosecondsToSeconds(tx_timestamp.UnixNano())}
 		packets = append(packets, &packet)
 	}
 
 	return packets, nil
+}
+
+func convertNanosecondsToSeconds(nanoseconds int64) float64 {
+	return float64(nanoseconds) / math.Pow10(9)
 }
