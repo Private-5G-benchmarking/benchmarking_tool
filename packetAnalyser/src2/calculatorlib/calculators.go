@@ -97,6 +97,34 @@ func calculateThroughput(packets []*parselib.Packet) (map[int64]float32, error) 
 	return tputs, nil
 }
 
+func calculatePacketLoss(packets []*parselib.Packet) (map[int64]float32, error) {
+	ploss := make(map[int64]float32)
+	var currentSecond int64 = int64(packets[0].Tx_ts)
+	var numPacketsCurrentSecond float32
+	var numLostPacketsCurrentSecond float32
+
+	for _, packet := range packets {
+		packetSecond := int64(packet.Tx_ts)
+		if packetSecond != currentSecond {
+			ploss[currentSecond] = numLostPacketsCurrentSecond / numPacketsCurrentSecond
+
+			numLostPacketsCurrentSecond = 0
+			numPacketsCurrentSecond = 0
+
+			currentSecond = packetSecond
+		}
+
+		numPacketsCurrentSecond += 1
+
+		if !packet.Found_match {
+			numLostPacketsCurrentSecond += 1
+		}
+	}
+	ploss[currentSecond] = numLostPacketsCurrentSecond / numPacketsCurrentSecond
+
+	return ploss, nil
+}
+
 type PerPacketCalculatorMap map[string]func([]*parselib.Packet) ([]float64, error)
 type AggregateCalculatorMap map[string]func([]*parselib.Packet) (map[int64]float32, error)
 
@@ -114,6 +142,7 @@ func GetAggreagateCalculatorMap() AggregateCalculatorMap {
 	m := make(AggregateCalculatorMap)
 
 	m["throughput"] = calculateThroughput
+	m["packet_loss"] = calculatePacketLoss
 
 	return m
 }
