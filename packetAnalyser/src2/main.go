@@ -48,8 +48,6 @@ func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, calculat
 			value := kpi_values[index]
 			if value >= 0 {
 				point = point.AddField(kpiName, kpi_values[index])
-			} else {
-				point = point.AddField(kpiName, nil)
 			}
 		}
 
@@ -83,8 +81,6 @@ func calculateAggregateKPIsAndWriteToInflux(packets []*parselib.Packet, calculat
 		for kpiName, value := range innerMap {
 			if value >= 0 {
 				point = point.AddField(kpiName, value)
-			} else {
-				point = point.AddField(kpiName, nil)
 			}
 		}
 
@@ -101,9 +97,9 @@ func main() {
 
 	flag.Parse()
 
-	p_in := `srcip,dstip,psize,encapsulated_psize,rx_ts,tx_ts
+	p_in := `srcip,dstip,psize,encapsulated_psize,rx_ts,tx_ts,found_match
 	8.8.8.8,8.8.8.9,58,104,2024-03-12 14:20:03.824793711 +0000 UTC,2024-03-12 14:20:03.824624512 +0000 UTC,true
-	8.8.8.8,8.8.8.9,56,104,2024-03-12 14:20:03.824796771 +0000 UTC,2024-03-12 14:20:03.833596771 +0000 UTC,true`
+	8.8.8.8,8.8.8.9,56,104,2024-03-12 14:20:03.834796771 +0000 UTC,2024-03-12 14:20:03.833596771 +0000 UTC,false`
 
 	packets, err := parselib.ParsePcapToPacketSlice(strings.NewReader(p_in))
 

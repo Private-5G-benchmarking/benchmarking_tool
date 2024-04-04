@@ -1,6 +1,7 @@
 package calculatorlib
 
 import (
+	"fmt"
 	"math"
 
 	"benchmarking/packetAnalyzer/parselib"
@@ -13,7 +14,10 @@ func calculateOneWayDelay(packets []*parselib.Packet) ([]float64, error) {
 	one_way_delays := make([]float64, len(packets))
 
 	for index, packet := range packets {
-		one_way_delay := packet.Rx_ts - packet.Tx_ts
+		one_way_delay, err := packet.OneWayDelay()
+		if err != nil {
+			fmt.Println(err)
+		}
 		one_way_delays[index] = one_way_delay
 	}
 
@@ -46,13 +50,24 @@ func calculateJitter(packets []*parselib.Packet) ([]float64, error) {
 	}
 
 	d := func(i, j int) float64 {
+		if one_way_delays[i] < 0 || one_way_delays[j] < 0 {
+			return -101010
+		}
 		return one_way_delays[j] - one_way_delays[i]
 	}
 
 	jitters[0] = 0
 
 	for i := 1; i < len(packets); i++ {
-		jitter := jitters[i-1] + (math.Abs(d(i-1, i)-jitters[i-1]) / 16)
+		diff := d(i-1, i)
+		var jitter float64
+
+		if diff < -101010 {
+			jitter = -1
+		} else {
+			jitter = jitters[i-1] + (math.Abs(d(i-1, i)-jitters[i-1]) / 16)
+		}
+
 		jitters[i] = jitter
 	}
 
@@ -67,6 +82,10 @@ func calculateThroughput(packets []*parselib.Packet) (map[int64]float32, error) 
 	var currentSecond int64
 
 	for _, packet := range packets {
+		if !packet.Found_match {
+			continue
+		}
+
 		packetSecond := int64(packet.Tx_ts)
 		if packetSecond != currentSecond {
 			currentSecond = packetSecond

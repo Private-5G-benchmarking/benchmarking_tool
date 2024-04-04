@@ -2,6 +2,7 @@ package parselib
 
 import (
 	"encoding/csv"
+	"errors"
 	"io"
 	"log"
 	"math"
@@ -18,6 +19,13 @@ type Packet struct {
 	Rx_ts              float64 // Format: seconds with nanosecond precision
 	Tx_ts              float64 // Format: seconds with nanosecond precision
 	Found_match        bool
+}
+
+func (packet Packet) OneWayDelay() (float64, error) {
+	if !packet.Found_match {
+		return -1, errors.New("attempted to calculate one-way delay on packet with missing match")
+	}
+	return packet.Rx_ts - packet.Tx_ts, nil
 }
 
 // ConvertToCSVFormat returns a comma-separated string without whitespace to
@@ -59,9 +67,15 @@ func parseCSVRecordToPacket(record []string, timestampLayout string) (*Packet, e
 	tx_ts := record[5]
 	found_match := record[6]
 
+	if psize == "" {
+		return nil, errors.New("psize is undefined")
+	}
 	psize_int, err := strconv.Atoi(psize)
 	if err != nil {
 		return nil, err
+	}
+	if encapsulated_psize == "" {
+		return nil, errors.New("encapsulated_psize is undefined")
 	}
 	encapsulated_psize_int, err := strconv.Atoi(encapsulated_psize)
 	if err != nil {
@@ -72,11 +86,17 @@ func parseCSVRecordToPacket(record []string, timestampLayout string) (*Packet, e
 	if err != nil {
 		return nil, err
 	}
+	if tx_ts == "" {
+		return nil, errors.New("tx_ts is undefined")
+	}
 	tx_timestamp, err := time.Parse(timestampLayout, tx_ts)
 	if err != nil {
 		return nil, err
 	}
 
+	if found_match == "" {
+		return nil, errors.New("found_match is undefined")
+	}
 	found_match_bool, err := strconv.ParseBool(found_match)
 	if err != nil {
 		return nil, err
