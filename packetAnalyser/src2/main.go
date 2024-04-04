@@ -45,7 +45,12 @@ func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, calculat
 		point := influxdb2.NewPointWithMeasurement(measurementName)
 
 		for kpiName, kpi_values := range valueMap {
-			point = point.AddField(kpiName, kpi_values[index])
+			value := kpi_values[index]
+			if value >= 0 {
+				point = point.AddField(kpiName, kpi_values[index])
+			} else {
+				point = point.AddField(kpiName, nil)
+			}
 		}
 
 		point = point.SetTime(time.Unix(numSec, numNanosec))
@@ -76,7 +81,11 @@ func calculateAggregateKPIsAndWriteToInflux(packets []*parselib.Packet, calculat
 		point := influxdb2.NewPointWithMeasurement(measurementName + "_aggregate")
 
 		for kpiName, value := range innerMap {
-			point = point.AddField(kpiName, value)
+			if value >= 0 {
+				point = point.AddField(kpiName, value)
+			} else {
+				point = point.AddField(kpiName, nil)
+			}
 		}
 
 		point = point.SetTime(time.Unix(timeSeconds, 0))
