@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"math"
 	"sort"
@@ -33,18 +32,11 @@ func SortPackets(packets []*parselib.Packet, on_rx bool) {
 	sort.Slice(packets, less)
 }
 
-func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, calculatorMap calculatorlib.CalculatorMap, writeAPI api.WriteAPI, measurementName string) {
-	valueMap := make(map[string][]float64)
+func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, calculatorMap calculatorlib.PerPacketCalculatorMap, writeAPI api.WriteAPI, measurementName string) {
+	valueMap, error := calculatorlib.CalculatePerPacketKPIs(calculatorMap, packets)
 
-	for kpiName, fn := range calculatorMap {
-		values, error := fn(packets)
-
-		if error != nil {
-			fmt.Println("Error occured! Returning...")
-			return
-		}
-
-		valueMap[kpiName] = values
+	if error != nil {
+		log.Fatal(error)
 	}
 
 	for index, packet := range packets {
@@ -62,6 +54,37 @@ func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, calculat
 	}
 }
 
+func calculateAggregateKPIsAndWriteToInflux(packets []*parselib.Packet, calculatorMap calculatorlib.AggregateCalculatorMap, writeAPI api.WriteAPI, measurementName string) {
+	valueMap, error := calculatorlib.CalculateAggregateKPIs(calculatorMap, packets)
+
+	if error != nil {
+		log.Fatal(error)
+	}
+
+	newMap := make(map[int64]map[string]float32)
+
+	for key, innerMap := range valueMap {
+		for innerKey, value := range innerMap {
+			if _, ok := newMap[innerKey]; !ok {
+				newMap[innerKey] = make(map[string]float32)
+			}
+			newMap[innerKey][key] = value
+		}
+	}
+
+	for timeSeconds, innerMap := range newMap {
+		point := influxdb2.NewPointWithMeasurement(measurementName + "_aggregate")
+
+		for kpiName, value := range innerMap {
+			point = point.AddField(kpiName, value)
+		}
+
+		point = point.SetTime(time.Unix(timeSeconds, 0))
+
+		writeAPI.WritePoint(point)
+	}
+}
+
 func main() {
 	var measurementName string
 
@@ -70,8 +93,8 @@ func main() {
 	flag.Parse()
 
 	p_in := `srcip,dstip,psize,encapsulated_psize,rx_ts,tx_ts
-8.8.8.8,8.8.8.9,58,104,2024-03-12 14:20:03.824793711 +0000 UTC,2024-03-12 14:20:03.824624512 +0000 UTC
-8.8.8.8,8.8.8.9,56,104,2024-03-12 14:20:03.824796771 +0000 UTC,2024-03-12 14:20:03.833596771 +0000 UTC`
+	8.8.8.8,8.8.8.9,58,104,2024-03-12 14:20:03.824793711 +0000 UTC,2024-03-12 14:20:03.824624512 +0000 UTC
+	8.8.8.8,8.8.8.9,56,104,2024-03-12 14:20:03.824796771 +0000 UTC,2024-03-12 14:20:03.833596771 +0000 UTC`
 
 	packets, err := parselib.ParsePcapToPacketSlice(strings.NewReader(p_in))
 
@@ -90,5 +113,16 @@ func main() {
 	bucket := "5gbenchmarking"
 	writeAPI := client.WriteAPI(org, bucket)
 
-	calculatePerPacketKPIsAndWriteToInflux(packets, calculatorlib.GetCalculatorMap(), writeAPI, measurementName)
+	calculatePerPacketKPIsAndWriteToInflux(packets, calculatorlib.GetPerPacketCalculatorMap(), writeAPI, measurementName)
+	calculateAggregateKPIsAndWriteToInflux(packets, calculatorlib.GetAggreagateCalculatorMap(), writeAPI, measurementName)
+	// packets := []*parselib.Packet{
+	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 0.004, Tx_ts: 0.003},
+	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 0.005, Tx_ts: 0.004},
+	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 0.006, Tx_ts: 0.005},
+	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 0.007, Tx_ts: 0.006},
+	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 1.001, Tx_ts: 1.000},
+	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 1.007, Tx_ts: 1.006},
+	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 1.007, Tx_ts: 1.006},
+	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 1.007, Tx_ts: 1.006},
+	// }
 }

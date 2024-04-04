@@ -9,7 +9,7 @@ import (
 // CalculateOneWayDelay accepts an array of Packets and calculates the difference
 // between their receive timestamp (Rx_ts) and their transmit timestamp (Tx_ts).
 // It returns the difference in seconds.
-func CalculateOneWayDelay(packets []*parselib.Packet) ([]float64, error) {
+func calculateOneWayDelay(packets []*parselib.Packet) ([]float64, error) {
 	one_way_delays := make([]float64, len(packets))
 
 	for index, packet := range packets {
@@ -23,7 +23,7 @@ func CalculateOneWayDelay(packets []*parselib.Packet) ([]float64, error) {
 // CalculateInterArrivalTime accepts and array of Packets and calculates the
 // difference in transmit timestamps (Tx_ts) between successive packets.
 // It returns the differences in seconds.
-func CalculateInterArrivalTime(packets []*parselib.Packet) ([]float64, error) {
+func calculateInterArrivalTime(packets []*parselib.Packet) ([]float64, error) {
 	inter_arrival_times := make([]float64, len(packets))
 
 	for i := 1; i < len(packets); i++ {
@@ -37,9 +37,9 @@ func CalculateInterArrivalTime(packets []*parselib.Packet) ([]float64, error) {
 // CalculateJitter (CalculateIPDV) accepts an array of Packets and calculates
 // the IPDV for each packet according to
 // RFC 3393. It returns the IPDVs in seconds.
-func CalculateJitter(packets []*parselib.Packet) ([]float64, error) {
+func calculateJitter(packets []*parselib.Packet) ([]float64, error) {
 	jitters := make([]float64, len(packets))
-	one_way_delays, err := CalculateOneWayDelay(packets)
+	one_way_delays, err := calculateOneWayDelay(packets)
 
 	if err != nil {
 		return jitters, err
@@ -59,14 +59,74 @@ func CalculateJitter(packets []*parselib.Packet) ([]float64, error) {
 	return jitters, nil
 }
 
-type CalculatorMap map[string]func([]*parselib.Packet) ([]float64, error)
+// CalculateThroughput calculates the raw amount of bytes being transmitted
+// per second. It returns a map where the second is the key and the
+// throughput is the value
+func calculateThroughput(packets []*parselib.Packet) (map[int64]float32, error) {
+	tputs := make(map[int64]float32)
+	var currentSecond int64
 
-func GetCalculatorMap() CalculatorMap {
-	m := make(CalculatorMap)
+	for _, packet := range packets {
+		packetSecond := int64(packet.Tx_ts)
+		if packetSecond != currentSecond {
+			currentSecond = packetSecond
+		}
 
-	m["packet_owd"] = CalculateOneWayDelay
-	m["packet_interarrival_time"] = CalculateInterArrivalTime
-	m["packet_jitter"] = CalculateJitter
+		tputs[currentSecond] += float32(packet.Psize)
+	}
+
+	return tputs, nil
+}
+
+type PerPacketCalculatorMap map[string]func([]*parselib.Packet) ([]float64, error)
+type AggregateCalculatorMap map[string]func([]*parselib.Packet) (map[int64]float32, error)
+
+func GetPerPacketCalculatorMap() PerPacketCalculatorMap {
+	m := make(PerPacketCalculatorMap)
+
+	m["packet_owd"] = calculateOneWayDelay
+	m["packet_interarrival_time"] = calculateInterArrivalTime
+	m["packet_jitter"] = calculateJitter
 
 	return m
+}
+
+func GetAggreagateCalculatorMap() AggregateCalculatorMap {
+	m := make(AggregateCalculatorMap)
+
+	m["throughput"] = calculateThroughput
+
+	return m
+}
+
+func CalculatePerPacketKPIs(calculatorMap PerPacketCalculatorMap, packets []*parselib.Packet) (map[string][]float64, error) {
+	valueMap := make(map[string][]float64)
+
+	for kpiName, fn := range calculatorMap {
+		values, error := fn(packets)
+
+		if error != nil {
+			return nil, error
+		}
+
+		valueMap[kpiName] = values
+	}
+
+	return valueMap, nil
+}
+
+func CalculateAggregateKPIs(calculatorMap AggregateCalculatorMap, packets []*parselib.Packet) (map[string]map[int64]float32, error) {
+	valueMap := make(map[string]map[int64]float32)
+
+	for kpiName, fn := range calculatorMap {
+		values, error := fn(packets)
+
+		if error != nil {
+			return nil, error
+		}
+
+		valueMap[kpiName] = values
+	}
+
+	return valueMap, nil
 }
