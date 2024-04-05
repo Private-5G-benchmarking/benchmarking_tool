@@ -1,5 +1,5 @@
-// profilinglib provides utility functions for setting up processor and memory
-// profiling using pprof
+// This package is used to send "live" updates to influx
+// and is used by a grafana dashboard for refreshes
 package main
 
 import (
