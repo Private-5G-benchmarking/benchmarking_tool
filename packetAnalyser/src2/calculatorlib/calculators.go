@@ -40,8 +40,8 @@ func calculateInterArrivalTime(packets []*parselib.Packet) ([]float64, error) {
 
 // CalculateJitter (CalculateIPDV) accepts an array of Packets and calculates
 // the IPDV for each packet according to
-// RFC 3393. It returns the IPDVs in seconds.
-func calculateJitter(packets []*parselib.Packet) ([]float64, error) {
+// RFC 3550. It returns the IPDVs in seconds.
+func calculateRFC3550Jitter(packets []*parselib.Packet) ([]float64, error) {
 	jitters := make([]float64, len(packets))
 	one_way_delays, err := calculateOneWayDelay(packets)
 
@@ -66,6 +66,42 @@ func calculateJitter(packets []*parselib.Packet) ([]float64, error) {
 			jitter = -1
 		} else {
 			jitter = jitters[i-1] + (math.Abs(d(i-1, i)-jitters[i-1]) / 16)
+		}
+
+		jitters[i] = jitter
+	}
+
+	return jitters, nil
+}
+
+// CalculateJitter (CalculateIPDV) accepts an array of Packets and calculates
+// the IPDV for each packet according to
+// RFC 3393. It returns the IPDVs in seconds.
+func calculateRFC3393Jitter(packets []*parselib.Packet) ([]float64, error) {
+	jitters := make([]float64, len(packets))
+	one_way_delays, err := calculateOneWayDelay(packets)
+
+	if err != nil {
+		return jitters, err
+	}
+
+	d := func(i, j int) float64 {
+		if one_way_delays[i] < 0 || one_way_delays[j] < 0 {
+			return -101010
+		}
+		return one_way_delays[j] - one_way_delays[i]
+	}
+
+	jitters[0] = 0
+
+	for i := 1; i < len(packets); i++ {
+		diff := d(i-1, i)
+		var jitter float64
+
+		if diff < -101010 {
+			jitter = -1
+		} else {
+			jitter = diff
 		}
 
 		jitters[i] = jitter
@@ -133,7 +169,8 @@ func GetPerPacketCalculatorMap() PerPacketCalculatorMap {
 
 	m["packet_owd"] = calculateOneWayDelay
 	m["packet_interarrival_time"] = calculateInterArrivalTime
-	m["packet_jitter"] = calculateJitter
+	m["packet_jitter_weighted"] = calculateRFC3550Jitter
+	m["packet_jitter_raw"] = calculateRFC3393Jitter
 
 	return m
 }
