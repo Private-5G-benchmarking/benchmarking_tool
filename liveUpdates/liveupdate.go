@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -14,30 +15,24 @@ import (
 )
 
 func main() {
-	// Open Stdin
-	file := os.Stdin
 	// 	//Connect to Influx database and set up the writeAPI client
 	clientOptions := influxdb2.DefaultOptions().
-	SetPrecision(time.Nanosecond)
-	
+	SetPrecision(time.Nanosecond)	
 	client := influxdb2.NewClientWithOptions("http://localhost:8086", "OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ==", clientOptions)
 	defer client.Close()
-	
 	org := "5gbenchmarking"
 	bucket := "5gbenchmarking"
 	writeAPI := client.WriteAPIBlocking(org, bucket)
-
-	// Create a ticker to print every 2 seconds
+	
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
+	
+	// Open Stdin and create scanner to read from Stdin
+	file := os.Stdin
 
-	// Create a scanner to read from Stdin
 	scanner := bufio.NewScanner(file)
 
-	// Channel to signal exit
 	done := make(chan struct{})
-
-	totalCounter := int64(0)
 
 	// Goroutine to read from Stdin
 	go func() {
@@ -51,26 +46,20 @@ func main() {
 					close(done)
 					return
 				}
-				input := scanner.Text()
-				fields := strings.Split(input, " ")
-				fmt.Println(fields)
-				// fmt.Println(len(fields))
-				fmt.Println(fields[3])
-				fmt.Println(fields[4])
-				fmt.Println(fields[5])
-				// counter, _ := strconv.ParseInt(scanner.Text(), 10, 0)
-				totalCounter ++ // = totalCounter + counter
-				if (totalCounter % 10 == 0) {
-					fmt.Println("Read from Stdin:", totalCounter)
-					p := influxdb2.NewPointWithMeasurement("live_counter").AddField("counter", totalCounter)
+
+				// Take the Tshark output and extract the tshark counter
+				inputString := strings.TrimSpace(scanner.Text())
+				fields := strings.Split(inputString, " ")
+				tsharkCounter, err := strconv.ParseInt(fields[0], 10, 0)
+				
+				if err != nil {
+					fmt.Println(err)
+				}
+				//Write a count every 10 000 packets 
+				if (tsharkCounter % 10000 == 0) {
+					p := influxdb2.NewPointWithMeasurement("live_counter").AddField("counter", tsharkCounter)
 					writeAPI.WritePoint(context.Background(), p)
 				}
-				// if err != nil {
-					// fmt.Println(err)
-				// }
-
-
-				// Print the data
 			}
 		}
 	}()
@@ -79,9 +68,8 @@ func main() {
 	for {
 		select {
 		case <-ticker.C:
-			// Do nothing, let the data reading goroutine handle printing
 		case <-done:
-			return // Exit if done
+			return
 		}
 	}
 }

@@ -26,9 +26,10 @@
         seconds: "30" # add this to wait for the trex server to start before generating traffic 
 
     - name: Start tshark
+      become: yes
       args:
-        chdir: /home/shared/benchmarking_tool/packetCapturer
-      command: "tshark -f '(host 192.168.2.111) or (ether[78:2] = 0x1f40 and ether[80:2] = 0x2328)' -i {{ interface1 }} -i {{ interface2 }} -a duration:{{ tshark_duration }} -w /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng" # TODO: fix filter
+        chdir: /home/sebastfu/benchmarking_tool/liveUpdates/
+      shell: "tshark -i {{ interface1 }} -f 'host 192.168.2.111 or host 192.168.2.100' -i {{ interface2 }} -f 'ether[78:2] = 0x1f40 and ether[80:2] = 0x2328' -a duration:{{ tshark_duration }} -w /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -P | go run /home/sebastfu/benchmarking_tool/liveUpdates/liveupdate.go"
       async: "{{ (tshark_duration+30)|int|abs }}"
       poll: 0
       register: tshark
@@ -67,7 +68,7 @@
     - name: Run Go script
       args:
         chdir: /home/shared/benchmarking_tool/packetCapturer
-      shell: "sudo go run /home/shared/benchmarking_tool/packetCapturer/packetParserWithInflux2.go -s /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -t {{ trial_name }} -p {{ sample_prob }}"
+      shell: "sudo go run /home/shared/benchmarking_tool/packetCapturer/parsePcapWriteToDb.go -s /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -t {{ trial_name }} -p {{ sample_prob }}"
       register: go_script_output
 
     - name: Print Go script output
