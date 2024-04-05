@@ -1,50 +1,66 @@
 package slidingwindowlib
 
 import (
-	"packetCapturer/influxlib"
+	"encoding/csv"
+	"packetCapturer/csvlib"
 	"packetCapturer/samplelib"
 	"time"
-
-	"github.com/influxdata/influxdb-client-go/v2/api"
 )
 
 func HandlePacketMatch(
+	writer *csv.Writer,
 	writeHandler func(
-		writeAPI api.WriteAPI,
-		srcIP string,
-		dstIP string,
-		txTs time.Time,
-		rxTs time.Time,
-		packetSize int,
-		found_match bool,
+		writer *csv.Writer,
+		packetStruct csvlib.Packet,
 		measurementName string,
 	),
-	writeAPI api.WriteAPI,
 	packet map[string]interface{},
 	slidingWindowPacket map[string]interface{},
-	mearurementName string,
+	measurementName string,
 ) {
+
 	txTs := slidingWindowPacket["packet_ts"].(time.Time)
 	packetSize := slidingWindowPacket["psize"].(int)
 
-	if txTs.Before(packet["packet_ts"].(time.Time)) {
-		writeHandler(writeAPI, slidingWindowPacket["src_ip"].(string), slidingWindowPacket["dst_ip"].(string), txTs, packet["packet_ts"].(time.Time), packetSize, true, mearurementName)
-	} else {
-		writeHandler(writeAPI, packet["src_ip"].(string), packet["dst_ip"].(string), packet["packet_ts"].(time.Time), txTs, packet["psize"].(int), true, mearurementName)
+	packetStruct := csvlib.Packet{
+		Srcip: slidingWindowPacket["src_ip"].(string),
+		Dstip: slidingWindowPacket["dst_ip"].(string),
+		Psize: packetSize,
+		Encapsulated_psize: packetSize, 
+		Rx_ts: float64(packet["packet_ts"].(time.Time).Unix()),
+		Tx_ts: float64(txTs.Unix()),
+		Found_match: true,
 	}
+
+	if !txTs.Before(packet["packet_ts"].(time.Time)) {
+		packetStruct.Srcip = packet["src_ip"].(string)
+		packetStruct.Dstip = packet["dst_ip"].(string)
+		packetStruct.Rx_ts =  float64(packet["packet_ts"].(time.Time).Unix())
+		packetStruct.Tx_ts = float64(txTs.Unix())
+		packetStruct.Psize = packet["psize"].(int)
+		//TODO this is probably not the correct way to handle this field
+		packetStruct.Encapsulated_psize = packet["psize"].(int)
+
+	}
+
+	writeHandler(writer, packetStruct, measurementName)
 }
 
-func EmptySlidingWindow(slidingWindow []map[string]interface{}, writeAPI api.WriteAPI, cdf []float32, dest_measurement string) int {
+func EmptySlidingWindow(slidingWindow []map[string]interface{}, writer *csv.Writer, cdf []float32, dest_measurement string) int {
 	localRowCount := 0
 
 	for _, p := range slidingWindow {
-		// Type assertions for map values
-		srcIP := p["src_ip"].(string)
-		dstIP := p["dst_ip"].(string)
-		packet_ts := p["packet_ts"].(time.Time)
-		psize := p["psize"].(int)
+		packet := csvlib.Packet{
+			Srcip: p["src_ip"].(string),
+			Dstip: p["dst_ip"].(string),
+			Psize: p["psize"].(int),
+			Encapsulated_psize:  p["psize"].(int), 
+			Rx_ts: float64(p["packet_ts"].(time.Time).Unix()),
+			Tx_ts: float64(p["packet_ts"].(time.Time).Unix()),
+			Found_match: false,
+		}
 		if samplelib.Sample(cdf) == 1 {
-			influxlib.WriteInfluxDBPoint(writeAPI, srcIP, dstIP, packet_ts, packet_ts, psize, false, dest_measurement)
+			csvlib.WriteParsedPacketToCsv(writer, packet, dest_measurement)
 			localRowCount += 1
 		}
 	}

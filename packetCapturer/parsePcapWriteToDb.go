@@ -1,12 +1,15 @@
 package main
 
 import (
+	"encoding/csv"
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"runtime/pprof"
 	"time"
 
+	"packetCapturer/csvlib"
 	"packetCapturer/influxlib"
 	"packetCapturer/profilinglib"
 	"packetCapturer/samplelib"
@@ -15,7 +18,6 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
-	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
 const batchSize = 10000
@@ -98,25 +100,22 @@ func main() {
 	pprof.WriteHeapProfile(memoryProfile)
 	defer memoryProfile.Close()
 
-	//Connect to Influx database and set up the writeAPI client
-	clientOptions := influxdb2.DefaultOptions().
-		SetBatchSize(batchSize).
-		SetPrecision(time.Nanosecond).
-		SetUseGZip(true)
-
-	client := influxdb2.NewClientWithOptions("http://localhost:8086", "OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ==", clientOptions)
-	defer client.Close()
-
-	org := "5gbenchmarking"
-	bucket := "5gbenchmarking"
-	writeAPI := client.WriteAPI(org, bucket)
-
 	// Open the pcap file
 	handle, err := pcap.OpenOffline(pcap_loc)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer handle.Close()
+
+	//Setup for csv writes
+	file, err := os.Create("parsedPackets.csv")
+	if err != nil {
+		log.Fatal("could not create CSV file: ", err)
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
 
 	// Create a packet source to read packets from the file
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
@@ -146,7 +145,7 @@ func main() {
 				sample := samplelib.Sample(cdf)
 
 				if sample == 1 {
-					slidingwindowlib.HandlePacketMatch(influxlib.WriteInfluxDBPoint, writeAPI, parsedPacket, p, dest_measurement)
+					slidingwindowlib.HandlePacketMatch(writer, csvlib.WriteParsedPacketToCsv, parsedPacket, p, dest_measurement)
 					rowCount++
 				}
 
@@ -168,14 +167,17 @@ func main() {
 			psize := exitingElement["psize"].(int)
 
 			if samplelib.Sample(cdf) == 1 {
-				influxlib.WriteInfluxDBPoint(writeAPI, srcIP, dstIP, packet_ts, packet_ts, psize, false, dest_measurement)
+				//TODO: fix this!
+				fmt.Println(srcIP, dstIP, packet_ts, psize)
+				// csvlib.WriteParsedPacketToCsv(srcIP, dstIP, packet_ts, packet_ts, psize, false, dest_measurement)
+				// csvutils.WriteInfluxDBPoint(writeAPI, srcIP, dstIP, packet_ts, packet_ts, psize, false, dest_measurement)
 				rowCount++
 			}
 			slidingWindow = slidingWindow[1:]
 		}
 	}
 
-	rowCount += slidingwindowlib.EmptySlidingWindow(slidingWindow, writeAPI, cdf, dest_measurement)
+	rowCount += slidingwindowlib.EmptySlidingWindow(slidingWindow, writer, cdf, dest_measurement)
 
 	// Record the end time
 	endTime := time.Now()
