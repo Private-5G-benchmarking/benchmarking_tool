@@ -99,7 +99,7 @@ func main() {
 
 	p_in := `srcip,dstip,psize,encapsulated_psize,rx_ts,tx_ts,found_match
 	8.8.8.8,8.8.8.9,58,104,2024-03-12 14:20:03.824793711 +0000 UTC,2024-03-12 14:20:03.824624512 +0000 UTC,true
-	8.8.8.8,8.8.8.9,56,104,2024-03-12 14:20:03.834796771 +0000 UTC,2024-03-12 14:20:03.833596771 +0000 UTC,false`
+	8.8.8.8,8.8.8.9,56,104,2024-03-12 14:20:03.834796771 +0000 UTC,2024-03-12 14:20:03.833596771 +0000 UTC,true`
 
 	packets, err := parselib.ParsePcapToPacketInfoSlice(strings.NewReader(p_in))
 

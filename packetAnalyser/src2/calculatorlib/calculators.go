@@ -161,6 +161,62 @@ func calculatePacketLoss(packets []*parselib.PacketInfo) (map[int64]float32, err
 	return ploss, nil
 }
 
+func calculateAvailability(packets []*parselib.PacketInfo, threshold float32) (map[int64]float32, error) {
+	availabilities := make(map[int64]float32)
+	currentSecond := int64(packets[0].Tx_ts)
+	var numPacketsCurrentSecond float32
+	var numPacketsWithinThresholdCurrentSecond float32
+
+	for _, packet := range packets {
+		packetSecond := int64(packet.Tx_ts)
+
+		if packetSecond != currentSecond {
+			availabilities[currentSecond] = numPacketsWithinThresholdCurrentSecond / numPacketsCurrentSecond
+
+			numPacketsCurrentSecond = 0
+			numPacketsWithinThresholdCurrentSecond = 0
+
+			currentSecond = packetSecond
+		}
+
+		numPacketsCurrentSecond += 1
+
+		owd, err := packet.OneWayDelay()
+		if err != nil || !packet.Found_match {
+			continue
+		}
+		if float32(owd) <= threshold {
+			numPacketsWithinThresholdCurrentSecond += 1
+		}
+	}
+	availabilities[currentSecond] = numPacketsWithinThresholdCurrentSecond / numPacketsCurrentSecond
+
+	return availabilities, nil
+}
+
+func getAvailabilityCalculators() map[string]func(packets []*parselib.PacketInfo) (map[int64]float32, error) {
+	thresholds := map[string]float32{
+		"2ms":   0.002,
+		"4ms":   0.004,
+		"8ms":   0.008,
+		"16ms":  0.016,
+		"32ms":  0.032,
+		"64ms":  0.064,
+		"128ms": 0.128,
+	}
+
+	availabilityFuncs := make(map[string]func(packets []*parselib.PacketInfo) (map[int64]float32, error))
+
+	for thresh_str, thresh_val := range thresholds {
+		foo := func(packets []*parselib.PacketInfo) (map[int64]float32, error) {
+			return calculateAvailability(packets, thresh_val)
+		}
+		availabilityFuncs[thresh_str] = foo
+	}
+
+	return availabilityFuncs
+}
+
 type PerPacketCalculatorMap map[string]func([]*parselib.PacketInfo) ([]float64, error)
 type AggregateCalculatorMap map[string]func([]*parselib.PacketInfo) (map[int64]float32, error)
 
@@ -180,6 +236,12 @@ func GetAggregateCalculatorMap() AggregateCalculatorMap {
 
 	m["throughput"] = calculateThroughput
 	m["packet_loss"] = calculatePacketLoss
+
+	availabilityCalculators := getAvailabilityCalculators()
+
+	for calc_name, fn := range availabilityCalculators {
+		m["availability"+calc_name] = fn
+	}
 
 	return m
 }
