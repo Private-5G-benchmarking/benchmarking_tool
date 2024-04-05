@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type Packet struct {
+type PacketInfo struct {
 	Srcip              string
 	Dstip              string
 	Psize              int
@@ -21,7 +21,7 @@ type Packet struct {
 	Found_match        bool
 }
 
-func (packet Packet) OneWayDelay() (float64, error) {
+func (packet PacketInfo) OneWayDelay() (float64, error) {
 	if !packet.Found_match {
 		return -1, errors.New("attempted to calculate one-way delay on packet with missing match")
 	}
@@ -32,7 +32,7 @@ func (packet Packet) OneWayDelay() (float64, error) {
 // be used in a csv-file. The order of the values are
 // 1. Srcip 2. Dstip 3. Psize 4. Encapsulated_psize 5. Rx_ts 6. Tx_ts
 // 7. Found_match
-func (packet Packet) ConvertToCSVFormat() string {
+func (packet PacketInfo) ConvertToCSVFormat() string {
 	txSec := int64(packet.Tx_ts)
 	txNanosec := int64(math.Mod(packet.Tx_ts, 1) * math.Pow10(9))
 	txTime := time.Unix(txSec, txNanosec)
@@ -58,7 +58,7 @@ func (packet Packet) ConvertToCSVFormat() string {
 // a timestamp layout to parse the timestamp from the record.
 // It assumes the order of the columns to be 1. Srcip 2. Dstip 3. Psize
 // 4. Encapsulated_psize 5. Rx_ts 6. Tx_ts 7. Found_match
-func parseCSVRecordToPacket(record []string, timestampLayout string) (*Packet, error) {
+func parseCSVRecordToPacketInfo(record []string, timestampLayout string) (*PacketInfo, error) {
 	srcip := record[0]
 	dstip := record[1]
 	psize := record[2]
@@ -102,7 +102,7 @@ func parseCSVRecordToPacket(record []string, timestampLayout string) (*Packet, e
 		return nil, err
 	}
 
-	packet := Packet{
+	packet := PacketInfo{
 		srcip,
 		dstip,
 		psize_int,
@@ -118,10 +118,10 @@ func parseCSVRecordToPacket(record []string, timestampLayout string) (*Packet, e
 // ParsePcapToPacketSlice accepts an io.Reader object which it expects is
 // connected to a .csv-file with information to be formed into the Packet
 // struct.
-func ParsePcapToPacketSlice(r io.Reader) ([]*Packet, error) {
+func ParsePcapToPacketInfoSlice(r io.Reader) ([]*PacketInfo, error) {
 	reader := csv.NewReader(r)
 	layout := "2006-01-02 15:04:05.999999999 -0700 MST"
-	packets := make([]*Packet, 0)
+	packets := make([]*PacketInfo, 0)
 
 	i := 0
 
@@ -139,7 +139,7 @@ func ParsePcapToPacketSlice(r io.Reader) ([]*Packet, error) {
 			continue
 		}
 
-		packet, parseError := parseCSVRecordToPacket(record, layout)
+		packet, parseError := parseCSVRecordToPacketInfo(record, layout)
 
 		if parseError != nil {
 			log.Fatal(parseError)

@@ -17,7 +17,7 @@ import (
 
 // SortPackets sorts a slice of Packets on either their rx ts or ts tx.
 // It does so in place, and in ascending order.
-func SortPackets(packets []*parselib.Packet, on_rx bool) {
+func SortPackets(packets []*parselib.PacketInfo, on_rx bool) {
 	var less func(i, j int) bool
 	if on_rx {
 		less = func(i, j int) bool {
@@ -32,7 +32,7 @@ func SortPackets(packets []*parselib.Packet, on_rx bool) {
 	sort.Slice(packets, less)
 }
 
-func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, calculatorMap calculatorlib.PerPacketCalculatorMap, writeAPI api.WriteAPI, measurementName string) {
+func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.PacketInfo, calculatorMap calculatorlib.PerPacketCalculatorMap, writeAPI api.WriteAPI, measurementName string) {
 	valueMap, error := calculatorlib.CalculatePerPacketKPIs(calculatorMap, packets)
 
 	if error != nil {
@@ -57,7 +57,7 @@ func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, calculat
 	}
 }
 
-func calculateAggregateKPIsAndWriteToInflux(packets []*parselib.Packet, calculatorMap calculatorlib.AggregateCalculatorMap, writeAPI api.WriteAPI, measurementName string) {
+func calculateAggregateKPIsAndWriteToInflux(packets []*parselib.PacketInfo, calculatorMap calculatorlib.AggregateCalculatorMap, writeAPI api.WriteAPI, measurementName string) {
 	valueMap, error := calculatorlib.CalculateAggregateKPIs(calculatorMap, packets)
 
 	if error != nil {
@@ -101,7 +101,7 @@ func main() {
 	8.8.8.8,8.8.8.9,58,104,2024-03-12 14:20:03.824793711 +0000 UTC,2024-03-12 14:20:03.824624512 +0000 UTC,true
 	8.8.8.8,8.8.8.9,56,104,2024-03-12 14:20:03.834796771 +0000 UTC,2024-03-12 14:20:03.833596771 +0000 UTC,false`
 
-	packets, err := parselib.ParsePcapToPacketSlice(strings.NewReader(p_in))
+	packets, err := parselib.ParsePcapToPacketInfoSlice(strings.NewReader(p_in))
 
 	if err != nil {
 		log.Fatal(err)
@@ -119,7 +119,7 @@ func main() {
 	writeAPI := client.WriteAPI(org, bucket)
 
 	calculatePerPacketKPIsAndWriteToInflux(packets, calculatorlib.GetPerPacketCalculatorMap(), writeAPI, measurementName)
-	calculateAggregateKPIsAndWriteToInflux(packets, calculatorlib.GetAggreagateCalculatorMap(), writeAPI, measurementName)
+	calculateAggregateKPIsAndWriteToInflux(packets, calculatorlib.GetAggregateCalculatorMap(), writeAPI, measurementName)
 	// packets := []*parselib.Packet{
 	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 0.004, Tx_ts: 0.003},
 	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 0.005, Tx_ts: 0.004},
