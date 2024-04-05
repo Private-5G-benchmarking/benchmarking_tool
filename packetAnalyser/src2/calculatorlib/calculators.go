@@ -7,6 +7,18 @@ import (
 	"benchmarking/packetAnalyzer/parselib"
 )
 
+// calculateDiff subtracts val1 from val2. Some custom error-handling is added
+// for cases where val1 or val2 are negative as this is not within their
+// intended domain. If either of the values are negative, the integer
+// -101010 is returned as a sufficiently random value that will never be
+// calculated randomly given the nature of the values.
+func calculateDiff(val1, val2 float64) float64 {
+	if val1 < 0 || val2 < 0 {
+		return -101010
+	}
+	return val2 - val1
+}
+
 // CalculateOneWayDelay accepts an array of Packets and calculates the difference
 // between their receive timestamp (Rx_ts) and their transmit timestamp (Tx_ts).
 // It returns the difference in seconds.
@@ -17,6 +29,7 @@ func calculateOneWayDelay(packets []*parselib.PacketInfo) ([]float64, error) {
 		one_way_delay, err := packet.OneWayDelay()
 		if err != nil {
 			fmt.Println(err)
+			continue
 		}
 		one_way_delays[index] = one_way_delay
 	}
@@ -49,23 +62,16 @@ func calculateRFC3550Jitter(packets []*parselib.PacketInfo) ([]float64, error) {
 		return jitters, err
 	}
 
-	d := func(i, j int) float64 {
-		if one_way_delays[i] < 0 || one_way_delays[j] < 0 {
-			return -101010
-		}
-		return one_way_delays[j] - one_way_delays[i]
-	}
-
 	jitters[0] = 0
 
 	for i := 1; i < len(packets); i++ {
-		diff := d(i-1, i)
+		diff := calculateDiff(one_way_delays[i-1], one_way_delays[i])
 		var jitter float64
 
-		if diff < -101010 {
+		if diff == -101010 {
 			jitter = -1
 		} else {
-			jitter = jitters[i-1] + (math.Abs(d(i-1, i)-jitters[i-1]) / 16)
+			jitter = jitters[i-1] + (math.Abs(diff-jitters[i-1]) / 16)
 		}
 
 		jitters[i] = jitter
@@ -85,20 +91,13 @@ func calculateRFC3393Jitter(packets []*parselib.PacketInfo) ([]float64, error) {
 		return jitters, err
 	}
 
-	d := func(i, j int) float64 {
-		if one_way_delays[i] < 0 || one_way_delays[j] < 0 {
-			return -101010
-		}
-		return one_way_delays[j] - one_way_delays[i]
-	}
-
 	jitters[0] = 0
 
 	for i := 1; i < len(packets); i++ {
-		diff := d(i-1, i)
+		diff := calculateDiff(one_way_delays[i-1], one_way_delays[i])
 		var jitter float64
 
-		if diff < -101010 {
+		if diff == -101010 {
 			jitter = -1
 		} else {
 			jitter = diff
@@ -150,10 +149,10 @@ func calculatePacketLoss(packets []*parselib.PacketInfo) (map[int64]float32, err
 			currentSecond = packetSecond
 		}
 
-		numPacketsCurrentSecond += 1
+		numPacketsCurrentSecond++
 
 		if !packet.Found_match {
-			numLostPacketsCurrentSecond += 1
+			numLostPacketsCurrentSecond++
 		}
 	}
 	ploss[currentSecond] = numLostPacketsCurrentSecond / numPacketsCurrentSecond
@@ -179,14 +178,14 @@ func calculateAvailability(packets []*parselib.PacketInfo, threshold float32) (m
 			currentSecond = packetSecond
 		}
 
-		numPacketsCurrentSecond += 1
+		numPacketsCurrentSecond++
 
 		owd, err := packet.OneWayDelay()
 		if err != nil || !packet.Found_match {
 			continue
 		}
 		if float32(owd) <= threshold {
-			numPacketsWithinThresholdCurrentSecond += 1
+			numPacketsWithinThresholdCurrentSecond++
 		}
 	}
 	availabilities[currentSecond] = numPacketsWithinThresholdCurrentSecond / numPacketsCurrentSecond
