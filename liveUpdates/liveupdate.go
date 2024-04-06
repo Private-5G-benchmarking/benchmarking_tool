@@ -54,6 +54,7 @@ func main() {
 				
 				if err != nil {
 					fmt.Println(err)
+					continue
 				}
 				//Write a count every 10 000 packets 
 				if (tsharkCounter % 10000 == 0) {

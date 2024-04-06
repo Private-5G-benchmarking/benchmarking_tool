@@ -6,15 +6,17 @@
 
   tasks:
 
-    - name: Purge Influx measurements with same trial name
+    - name: Purge Influx measurements with same trial name and the live counter
       become: yes
-      shell: "sudo influx delete --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking --bucket 5gbenchmarking --start '1970-01-01T00:00:00Z' --stop '2100-01-01T00:00:00Z' --predicate '_measurement={{ trial_name }}'"
-
+      shell: "{{ item }}"
+      with_items:
+        - "sudo influx delete --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking --bucket 5gbenchmarking --start '1970-01-01T00:00:00Z' --stop '2100-01-01T00:00:00Z' --predicate '_measurement={{ trial_name }}'"
+        - "sudo influx delete --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking --bucket 5gbenchmarking --start '1970-01-01T00:00:00Z' --stop '2100-01-01T00:00:00Z' --predicate '_measurement=live_counter'"
  
     - name: Start tshark
       args:
         chdir: /home/shared/benchmarking_tool/packetCapturer
-      command: "tshark -i {{ interface1 }} -i {{ interface2 }} -f 'ether[78:2]==0x270f and ether[80:2]==0x1b59' -a duration:{{ tshark_duration }} -w /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -P | go run /home/sebastfu/benchmarking_tool/liveUpdates/liveupdate.go"
+      command: "tshark -i {{ interface1 }} -i {{ interface2 }} -f 'ether[78:2]==0x270f and ether[80:2]==0x1b59' -a duration:{{ tshark_duration }} -w /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -P | go run /home/shared/benchmarking_tool/liveUpdates/liveupdate.go"
       async: "{{ (tshark_duration+30)|int|abs }}"
       poll: 0
       register: tshark
