@@ -20,8 +20,6 @@ import (
 	"github.com/google/gopacket/pcap"
 )
 
-const batchSize = 10000
-
 func removeFromSlice(slidingWindow []map[string]interface{}, indexToRemove int) []map[string]interface{} {
 	// Ensure the index is within the valid range
 	if indexToRemove < 0 || indexToRemove >= len(slidingWindow) {
@@ -145,7 +143,7 @@ func main() {
 				sample := samplelib.Sample(cdf)
 
 				if sample == 1 {
-					slidingwindowlib.HandlePacketMatch(writer, csvlib.WriteParsedPacketToCsv, parsedPacket, p, dest_measurement)
+					slidingwindowlib.HandlePacketMatch(writer, parsedPacket, p, dest_measurement)
 					rowCount++
 				}
 
@@ -160,17 +158,17 @@ func main() {
 
 		if len(slidingWindow) >= 2000 {
 			exitingElement := slidingWindow[0]
-			// Type assertions for map values
-			srcIP := exitingElement["src_ip"].(string)
-			dstIP := exitingElement["dst_ip"].(string)
-			packet_ts := exitingElement["packet_ts"].(time.Time)
-			psize := exitingElement["psize"].(int)
+			exitingPacket := csvlib.PacketInfo{
+				Srcip: exitingElement["src_ip"].(string),
+				Dstip:  exitingElement["dst_ip"].(string),
+				Psize: exitingElement["psize"].(int),
+				Encapsulated_psize: exitingElement["psize"].(int),
+				Rx_ts: float64(exitingElement["packet_ts"].(time.Time).Unix()),
+				Tx_ts: float64(exitingElement["packet_ts"].(time.Time).Unix()),
+			}
 
 			if samplelib.Sample(cdf) == 1 {
-				//TODO: fix this!
-				fmt.Println(srcIP, dstIP, packet_ts, psize)
-				// csvlib.WriteParsedPacketToCsv(srcIP, dstIP, packet_ts, packet_ts, psize, false, dest_measurement)
-				// csvutils.WriteInfluxDBPoint(writeAPI, srcIP, dstIP, packet_ts, packet_ts, psize, false, dest_measurement)
+				exitingPacket.WriteToCsv(writer, dest_measurement)
 				rowCount++
 			}
 			slidingWindow = slidingWindow[1:]

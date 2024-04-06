@@ -9,11 +9,6 @@ import (
 
 func HandlePacketMatch(
 	writer *csv.Writer,
-	writeHandler func(
-		writer *csv.Writer,
-		packetStruct csvlib.Packet,
-		measurementName string,
-	),
 	packet map[string]interface{},
 	slidingWindowPacket map[string]interface{},
 	measurementName string,
@@ -22,7 +17,7 @@ func HandlePacketMatch(
 	txTs := slidingWindowPacket["packet_ts"].(time.Time)
 	packetSize := slidingWindowPacket["psize"].(int)
 
-	packetStruct := csvlib.Packet{
+	packetStruct := csvlib.PacketInfo{
 		Srcip: slidingWindowPacket["src_ip"].(string),
 		Dstip: slidingWindowPacket["dst_ip"].(string),
 		Psize: packetSize,
@@ -42,15 +37,14 @@ func HandlePacketMatch(
 		packetStruct.Encapsulated_psize = packet["psize"].(int)
 
 	}
-
-	writeHandler(writer, packetStruct, measurementName)
+	packetStruct.WriteToCsv(writer, measurementName)
 }
 
 func EmptySlidingWindow(slidingWindow []map[string]interface{}, writer *csv.Writer, cdf []float32, dest_measurement string) int {
 	localRowCount := 0
 
 	for _, p := range slidingWindow {
-		packet := csvlib.Packet{
+		packet := csvlib.PacketInfo{
 			Srcip: p["src_ip"].(string),
 			Dstip: p["dst_ip"].(string),
 			Psize: p["psize"].(int),
@@ -60,7 +54,7 @@ func EmptySlidingWindow(slidingWindow []map[string]interface{}, writer *csv.Writ
 			Found_match: false,
 		}
 		if samplelib.Sample(cdf) == 1 {
-			csvlib.WriteParsedPacketToCsv(writer, packet, dest_measurement)
+			packet.WriteToCsv(writer, dest_measurement)
 			localRowCount += 1
 		}
 	}

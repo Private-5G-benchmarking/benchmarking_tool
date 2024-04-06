@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-type Packet struct {
+type PacketInfo struct {
 	Srcip              string
 	Dstip              string
 	Psize              int
@@ -16,7 +16,7 @@ type Packet struct {
 	Found_match        bool
 }
 
-func WriteParsedPacketToCsv(writer *csv.Writer, packet Packet, measurementName string) {
+func (packet PacketInfo) WriteToCsv(writer *csv.Writer, measurementName string) {
 	
 	row := []string{
 		packet.Srcip,
