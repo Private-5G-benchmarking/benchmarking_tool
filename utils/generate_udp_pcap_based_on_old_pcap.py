@@ -10,20 +10,6 @@ import argparse
 # new_src_ip = "192.168.2.100"
 # new_dst_ip = "172.30.0.47"
 
-
-parser = argparse.ArgumentParser(prog="Pcap generator", description="This program is used to generate a pcap which can be replayed as udp traffic using tcpreplay")
-
-parser.add_argument("-i", dest="input_file")
-parser.add_argument("-o", dest="output_file")
-parser.add_argument("-old_src_ip", dest="old_src_ip")
-parser.add_argument("-old_dst_ip", dest="old_dst_ip")
-parser.add_argument("-new_src_ip", dest="new_src_ip")
-parser.add_argument("-new_dst_ip", dest="new_dst_ip")
-parser.add_argument("-new_sport", dest="new_sport", type=int)
-parser.add_argument("-new_dport", dest="new_dport", type=int)
-
-args = parser.parse_args()
-
 def generate_payload(previous_payload):
     """
     Function that is used to generate the custom udp payload that is used
@@ -102,4 +88,20 @@ def generate_new_pcap(**kwargs):
     print(f"Finished generating new pcap at {output_file} with a total of {packet_counter} packets generated based on {input_file}.")
 
 
-generate_new_pcap(input_file=args.input_file, output_file=args.output_file, old_src_ip=args.old_src_ip, old_dst_ip=args.old_dst_ip, new_src_ip=args.new_src_ip, new_dst_ip=args.new_dst_ip, new_sport=args.new_sport, new_dport=args.new_dport)
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(prog="Pcap generator", description="This program is used to generate a pcap which can be replayed as udp traffic using tcpreplay")
+
+    parser.add_argument("-i", dest="input_file")
+    parser.add_argument("-o", dest="output_file")
+    parser.add_argument("-old_src_ip", dest="old_src_ip")
+    parser.add_argument("-old_dst_ip", dest="old_dst_ip")
+    parser.add_argument("-new_src_ip", dest="new_src_ip")
+    parser.add_argument("-new_dst_ip", dest="new_dst_ip")
+    parser.add_argument("-new_sport", dest="new_sport", type=int)
+    parser.add_argument("-new_dport", dest="new_dport", type=int)
+
+    args = parser.parse_args()
+
+    generate_new_pcap(input_file=args.input_file, output_file=args.output_file, old_src_ip=args.old_src_ip, old_dst_ip=args.old_dst_ip, new_src_ip=args.new_src_ip, new_dst_ip=args.new_dst_ip, new_sport=args.new_sport, new_dport=args.new_dport)
