@@ -94,8 +94,6 @@ func calculateRFC3393Jitter(packets []*parselib.PacketInfo) ([]float64, error) {
 	jitters[0] = 0
 
 	for i := 1; i < len(packets); i++ {
-		jitter2 := jitters[i-1] + ((math.Abs(d(i-1, i))-jitters[i-1]) / 16)
-    fmt.Println(jitter2)
 		diff := calculateDiff(one_way_delays[i-1], one_way_delays[i])
 		var jitter float64
 

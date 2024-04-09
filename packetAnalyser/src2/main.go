@@ -35,6 +35,10 @@ func SortPackets(packets []*parselib.PacketInfo, on_rx bool) {
 
 func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.PacketInfo, calculatorMap calculatorlib.PerPacketCalculatorMap, writeAPI api.WriteAPI, measurementName string) {
 	valueMap, error := calculatorlib.CalculatePerPacketKPIs(calculatorMap, packets)
+	
+	if error != nil {
+		log.Fatal(error)
+	}
 
 	for kpiName, fn := range calculatorMap {
 		values, error := fn(packets)

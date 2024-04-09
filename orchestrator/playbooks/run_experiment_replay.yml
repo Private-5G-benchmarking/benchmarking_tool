@@ -54,7 +54,7 @@
     - name: Run Go script
       args:
         chdir: /home/shared/benchmarking_tool/packetCapturer
-      shell: "sudo go run /home/shared/benchmarking_tool/packetCapturer/parsePcapWriteToDb.go -s /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -c /home/shared/output_files/csvs/{{ trial_name }} -p {{ sample_prob }}"x
+      shell: "sudo go run /home/shared/benchmarking_tool/packetCapturer/parsePcapWriteToDb.go -s /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -c /home/shared/output_files/csvs/{{ trial_name }} -p {{ sample_prob }}"
       register: go_script_output
 
     - name: Print Go script output
@@ -70,5 +70,5 @@
     - name: Run analytics
       args:
         chdir: /home/shared/benchmarking_tool/packetAnalyser/src2
-      shell: "sudo go run /home/shared/benchmarking_tool/packetAnalyser/src2/main.go -c /home/shared/output_files/csvs/{{ trial_name }}.csv -m {{ trial_name }}_analysis""
+      shell: "sudo go run /home/shared/benchmarking_tool/packetAnalyser/src2/main.go -c /home/shared/output_files/csvs/{{ trial_name }}.csv -m {{ trial_name }}_analysis"
       register: analytics_output

@@ -30,7 +30,7 @@ func NewPacketInfo(Srcip string, Dstip string, Psize int, Enccapsulated_psize in
 	}
 }
 
-func (packet PacketInfo) WriteToCsv(writer *csv.Writer, measurementName string) {
+func (packet PacketInfo) WriteToCsv(writer *csv.Writer) {
 	
 	row := []string{
 		packet.Srcip,

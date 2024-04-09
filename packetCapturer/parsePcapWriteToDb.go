@@ -106,7 +106,7 @@ func main() {
 	defer handle.Close()
 
 	//Setup for csv writes
-	file, err := os.Create(output_csv + ".csv")
+	file, err := os.Create(output_csv)
 	if err != nil {
 		log.Fatal("could not create CSV file: ", err)
 	}
@@ -144,7 +144,7 @@ func main() {
 				sample := samplelib.Sample(cdf)
 
 				if sample == 1 {
-					slidingwindowlib.HandlePacketMatch(writer, parsedPacket, p, output_csv)
+					slidingwindowlib.HandlePacketMatch(writer, parsedPacket, p)
 					rowCount++
 				}
 
@@ -162,14 +162,14 @@ func main() {
 			exitingPacket := csvlib.NewPacketInfo(exitingElement["src_ip"].(string), exitingElement["dst_ip"].(string), exitingElement["psize"].(int),exitingElement["psize"].(int),exitingElement["packet_ts"].(time.Time),exitingElement["packet_ts"].(time.Time), false)
 
 			if samplelib.Sample(cdf) == 1 {
-				exitingPacket.WriteToCsv(writer, output_csv)
+				exitingPacket.WriteToCsv(writer)
 				rowCount++
 			}
 			slidingWindow = slidingWindow[1:]
 		}
 	}
 
-	rowCount += slidingwindowlib.EmptySlidingWindow(slidingWindow, writer, cdf, output_csv)
+	rowCount += slidingwindowlib.EmptySlidingWindow(slidingWindow, writer, cdf)
 
 	// Record the end time
 	endTime := time.Now()
@@ -177,6 +177,6 @@ func main() {
 	// Calculate the duration
 	duration := endTime.Sub(startTime)
 	fmt.Printf("Script took %s to run.\n", duration)
-	fmt.Printf("%d rows written to InfluxDB.\n", rowCount)
+	fmt.Printf("%d rows written to csv.\n", rowCount)
 	fmt.Printf("%d The total number of packets in pcap is \n", totalNrPackets)
 }
