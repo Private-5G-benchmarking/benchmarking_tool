@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/csv"
 	"flag"
-	"fmt"
 	"log"
 	"math"
 	"os"
@@ -19,7 +18,7 @@ import (
 
 // SortPackets sorts a slice of Packets on either their rx ts or ts tx.
 // It does so in place, and in ascending order.
-func SortPackets(packets []*parselib.Packet, on_rx bool) {
+func SortPackets(packets []*parselib.PacketInfo, on_rx bool) {
 	var less func(i, j int) bool
 	if on_rx {
 		less = func(i, j int) bool {
@@ -34,14 +33,13 @@ func SortPackets(packets []*parselib.Packet, on_rx bool) {
 	sort.Slice(packets, less)
 }
 
-func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, calculatorMap calculatorlib.CalculatorMap, writeAPI api.WriteAPI, measurementName string) {
-	valueMap := make(map[string][]float64)
+func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.PacketInfo, calculatorMap calculatorlib.PerPacketCalculatorMap, writeAPI api.WriteAPI, measurementName string) {
+	valueMap, error := calculatorlib.CalculatePerPacketKPIs(calculatorMap, packets)
 
 	for kpiName, fn := range calculatorMap {
 		values, error := fn(packets)
 		if error != nil {
-			fmt.Println("Error occured! Returning...")
-			return
+			log.Fatal(error)
 		}
 
 		valueMap[kpiName] = values
@@ -53,10 +51,46 @@ func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, calculat
 		point := influxdb2.NewPointWithMeasurement(measurementName)
 
 		for kpiName, kpi_values := range valueMap {
-			point = point.AddField(kpiName, kpi_values[index])
+			value := kpi_values[index]
+			if value >= 0 {
+				point = point.AddField(kpiName, kpi_values[index])
+			}
 		}
 
 		point = point.SetTime(time.Unix(numSec, numNanosec))
+
+		writeAPI.WritePoint(point)
+	}
+}
+
+func calculateAggregateKPIsAndWriteToInflux(packets []*parselib.PacketInfo, calculatorMap calculatorlib.AggregateCalculatorMap, writeAPI api.WriteAPI, measurementName string) {
+	valueMap, error := calculatorlib.CalculateAggregateKPIs(calculatorMap, packets)
+
+	if error != nil {
+		log.Fatal(error)
+	}
+
+	newMap := make(map[int64]map[string]float32)
+
+	for key, innerMap := range valueMap {
+		for innerKey, value := range innerMap {
+			if _, ok := newMap[innerKey]; !ok {
+				newMap[innerKey] = make(map[string]float32)
+			}
+			newMap[innerKey][key] = value
+		}
+	}
+
+	for timeSeconds, innerMap := range newMap {
+		point := influxdb2.NewPointWithMeasurement(measurementName + "_aggregate")
+
+		for kpiName, value := range innerMap {
+			if value >= 0 {
+				point = point.AddField(kpiName, value)
+			}
+		}
+
+		point = point.SetTime(time.Unix(timeSeconds, 0))
 
 		writeAPI.WritePoint(point)
 	}
@@ -95,5 +129,6 @@ func main() {
 	bucket := "5gbenchmarking"
 	writeAPI := client.WriteAPI(org, bucket)
 
-	calculatePerPacketKPIsAndWriteToInflux(packets, calculatorlib.GetCalculatorMap(), writeAPI, measurementName)
+	calculatePerPacketKPIsAndWriteToInflux(packets, calculatorlib.GetPerPacketCalculatorMap(), writeAPI, measurementName)
+	calculateAggregateKPIsAndWriteToInflux(packets, calculatorlib.GetAggregateCalculatorMap(), writeAPI, measurementName)
 }

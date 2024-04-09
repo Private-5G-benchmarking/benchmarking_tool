@@ -1,0 +1,13 @@
+# vars.yml
+input_file: /home/sebastfu/WDM-AWIN_WiresharkLogs2024_03_08.pcapng
+output_file: /home/sebastfu/synthetic_udp.pcapng
+old_src_ip: "192.168.86.12"
+old_dst_ip: "192.168.86.36"
+new_eth_src: b4:96:91:3b:5c:3b
+new_eth_dst: 00:1e:42:5c:07:c0
+new_src_ip: "192.168.2.100"
+new_dst_ip: "172.30.0.47"
+new_sport: 8888
+new_dport: 8887
+
+
