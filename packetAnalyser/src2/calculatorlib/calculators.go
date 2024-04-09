@@ -52,8 +52,8 @@ func CalculateJitter(packets []*parselib.Packet) ([]float64, error) {
 	jitters[0] = 0
 
 	for i := 1; i < len(packets); i++ {
-		jitter := jitters[i-1] + (math.Abs(d(i-1, i)-jitters[i-1]) / 16)
-		jitters[i] = jitter
+		jitter := jitters[i-1] + ((d(i-1, i)-jitters[i-1]) / 16)
+		jitters[i] = math.Abs(jitter)
 	}
 
 	return jitters, nil
