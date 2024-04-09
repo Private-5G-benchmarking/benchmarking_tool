@@ -109,7 +109,7 @@ func calculateRFC3393Jitter(packets []*parselib.PacketInfo) ([]float64, error) {
 	return jitters, nil
 }
 
-// CalculateThroughput calculates the raw amount of bytes being transmitted
+// CalculateThroughput calculates the raw amount of bits being transmitted
 // per second. It returns a map where the second is the key and the
 // throughput is the value
 func calculateThroughput(packets []*parselib.PacketInfo) (map[int64]float32, error) {
@@ -126,7 +126,8 @@ func calculateThroughput(packets []*parselib.PacketInfo) (map[int64]float32, err
 			currentSecond = packetSecond
 		}
 
-		tputs[currentSecond] += float32(packet.Psize)
+		// PacketInfo.Psize unit is bytes - multiply by 8 to get bits
+		tputs[currentSecond] += float32(packet.Psize) * 8
 	}
 
 	return tputs, nil
