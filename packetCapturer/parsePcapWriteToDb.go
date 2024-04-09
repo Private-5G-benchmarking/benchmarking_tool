@@ -113,6 +113,7 @@ func main() {
 	defer file.Close()
 
 	writer := csv.NewWriter(file)
+	writer.Write([]string{"Srcip", "Dstip", "Psize", "Encapsulated_psize", "Rx_tx", "Tx_ts", "Found_match"})
 	defer writer.Flush()
 
 	// Create a packet source to read packets from the file
@@ -163,8 +164,8 @@ func main() {
 				Dstip:  exitingElement["dst_ip"].(string),
 				Psize: exitingElement["psize"].(int),
 				Encapsulated_psize: exitingElement["psize"].(int),
-				Rx_ts: float64(exitingElement["packet_ts"].(time.Time).Unix()),
-				Tx_ts: float64(exitingElement["packet_ts"].(time.Time).Unix()),
+				Rx_ts: float64(exitingElement["packet_ts"].(time.Time).UnixNano()),
+				Tx_ts: float64(exitingElement["packet_ts"].(time.Time).UnixNano()),
 			}
 
 			if samplelib.Sample(cdf) == 1 {
