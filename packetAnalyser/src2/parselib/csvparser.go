@@ -19,13 +19,13 @@ type Packet struct {
 // ParsePcapToPacketSlice accepts an io.Reader object which it expects is
 // connected to a .csv-file with information to be formed into the Packet
 // struct.
-func ParsePcapToPacketSlice(r *csv.Reader) ([]*Packet, error) {
+func ParsePcapToPacketSlice(reader *csv.Reader) ([]*Packet, error) {
 	packets := make([]*Packet, 0)
 
 	i := 0
 
 	for {
-		record, err := r.Read()
+		record, err := reader.Read()
 
 		if err == io.EOF {
 			break

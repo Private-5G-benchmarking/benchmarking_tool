@@ -64,14 +64,14 @@ func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, calculat
 
 func main() {
 	var measurementName string
-	var inputCsv string
+	var csvFileName string
 
 	flag.StringVar(&measurementName, "m", "test", "Provide an Influx measurement name")
-	flag.StringVar(&inputCsv, "c", "test", "Provide the filepath to the input csv file")
+	flag.StringVar(&csvFileName, "c", "test", "Provide the filepath to the input csv file")
 
 	flag.Parse()
 
-	f, err := os.Open(inputCsv)
+	f, err := os.Open(csvFileName)
     if err != nil {
         log.Fatal("Unable to read input file due to " , err)
     }
