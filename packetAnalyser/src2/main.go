@@ -1,12 +1,13 @@
 package main
 
 import (
+	"encoding/csv"
 	"flag"
 	"fmt"
 	"log"
 	"math"
+	"os"
 	"sort"
-	"strings"
 	"time"
 
 	"benchmarking/packetAnalyzer/calculatorlib"
@@ -69,11 +70,13 @@ func main() {
 
 	flag.Parse()
 
-	p_in := `srcip,dstip,psize,encapsulated_psize,rx_ts,tx_ts
-8.8.8.8,8.8.8.9,58,104,2024-03-12 14:20:03.824793711 +0000 UTC,2024-03-12 14:20:03.824624512 +0000 UTC
-8.8.8.8,8.8.8.9,56,104,2024-03-12 14:20:03.824796771 +0000 UTC,2024-03-12 14:20:03.833596771 +0000 UTC`
-
-	packets, err := parselib.ParsePcapToPacketSlice(strings.NewReader(p_in))
+	f, err := os.Open("/home/sebastfu/benchmarking_tool/packetCapturer/testerDenne2.csv")
+    if err != nil {
+        log.Fatal("Unable to read input file due to " , err)
+    }
+    defer f.Close()
+	csvReader := csv.NewReader((f))
+	packets, err := parselib.ParsePcapToPacketSlice(csvReader)
 
 	if err != nil {
 		log.Fatal(err)

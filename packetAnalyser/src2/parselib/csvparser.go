@@ -4,9 +4,7 @@ import (
 	"encoding/csv"
 	"io"
 	"log"
-	"math"
 	"strconv"
-	"time"
 )
 
 type Packet struct {
@@ -21,15 +19,13 @@ type Packet struct {
 // ParsePcapToPacketSlice accepts an io.Reader object which it expects is
 // connected to a .csv-file with information to be formed into the Packet
 // struct.
-func ParsePcapToPacketSlice(r io.Reader) ([]*Packet, error) {
-	reader := csv.NewReader(r)
-	layout := "2006-01-02 15:04:05.999999999 -0700 MST"
+func ParsePcapToPacketSlice(r *csv.Reader) ([]*Packet, error) {
 	packets := make([]*Packet, 0)
 
 	i := 0
 
 	for {
-		record, err := reader.Read()
+		record, err := r.Read()
 
 		if err == io.EOF {
 			break
@@ -58,22 +54,20 @@ func ParsePcapToPacketSlice(r io.Reader) ([]*Packet, error) {
 			return packets, err
 		}
 
-		rx_timestamp, err := time.Parse(layout, rx_ts)
-		if err != nil {
-			return packets, err
-		}
-		tx_timestamp, err := time.Parse(layout, tx_ts)
+		rx_ts_ns, err := strconv.ParseFloat(rx_ts, 64)
 		if err != nil {
 			return packets, err
 		}
 
-		packet := Packet{srcip, dstip, psize_int, encapsulated_psize_int, convertNanosecondsToSeconds(rx_timestamp.UnixNano()), convertNanosecondsToSeconds(tx_timestamp.UnixNano())}
+		tx_ts_ns, err := strconv.ParseFloat(tx_ts, 64)
+		if err != nil {
+			return packets, err
+		}
+
+		packet := Packet{srcip, dstip, psize_int, encapsulated_psize_int, rx_ts_ns, tx_ts_ns}
 		packets = append(packets, &packet)
 	}
 
 	return packets, nil
 }
 
-func convertNanosecondsToSeconds(nanoseconds int64) float64 {
-	return float64(nanoseconds) / math.Pow10(9)
-}

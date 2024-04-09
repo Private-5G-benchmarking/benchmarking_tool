@@ -1,6 +1,7 @@
 package calculatorlib
 
 import (
+	"fmt"
 	"math"
 
 	"benchmarking/packetAnalyzer/parselib"
@@ -38,6 +39,7 @@ func CalculateInterArrivalTime(packets []*parselib.Packet) ([]float64, error) {
 // the IPDV for each packet according to
 // RFC 3393. It returns the IPDVs in seconds.
 func CalculateJitter(packets []*parselib.Packet) ([]float64, error) {
+	fmt.Println(len(packets))
 	jitters := make([]float64, len(packets))
 	one_way_delays, err := CalculateOneWayDelay(packets)
 

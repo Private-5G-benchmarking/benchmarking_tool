@@ -70,11 +70,11 @@ func isPacketMatch(parsedPacket map[string]interface{}, p map[string]interface{}
 func main() {
 	// Setup flag
 	var pcap_loc string
-	var dest_measurement string
+	var output_csv string
 	var sample_prob float64
 
 	flag.StringVar(&pcap_loc, "s", "", "Provide a file path for the capture file (.pcap(ng))")
-	flag.StringVar(&dest_measurement, "t", "", "Provide a name for the destination measurement table in Influx")
+	flag.StringVar(&output_csv, "c", "", "Provide a name for the output csv file")
 	flag.Float64Var(&sample_prob, "p", 1.0, "Provide a sample probability for writing a packet to Influx")
 
 	flag.Parse()
@@ -106,7 +106,7 @@ func main() {
 	defer handle.Close()
 
 	//Setup for csv writes
-	file, err := os.Create("parsedPackets.csv")
+	file, err := os.Create(output_csv + ".csv")
 	if err != nil {
 		log.Fatal("could not create CSV file: ", err)
 	}
@@ -144,7 +144,7 @@ func main() {
 				sample := samplelib.Sample(cdf)
 
 				if sample == 1 {
-					slidingwindowlib.HandlePacketMatch(writer, parsedPacket, p, dest_measurement)
+					slidingwindowlib.HandlePacketMatch(writer, parsedPacket, p, output_csv)
 					rowCount++
 				}
 
@@ -159,24 +159,17 @@ func main() {
 
 		if len(slidingWindow) >= 2000 {
 			exitingElement := slidingWindow[0]
-			exitingPacket := csvlib.PacketInfo{
-				Srcip: exitingElement["src_ip"].(string),
-				Dstip:  exitingElement["dst_ip"].(string),
-				Psize: exitingElement["psize"].(int),
-				Encapsulated_psize: exitingElement["psize"].(int),
-				Rx_ts: float64(exitingElement["packet_ts"].(time.Time).UnixNano()),
-				Tx_ts: float64(exitingElement["packet_ts"].(time.Time).UnixNano()),
-			}
+			exitingPacket := csvlib.NewPacketInfo(exitingElement["src_ip"].(string), exitingElement["dst_ip"].(string), exitingElement["psize"].(int),exitingElement["psize"].(int),exitingElement["packet_ts"].(time.Time),exitingElement["packet_ts"].(time.Time), false)
 
 			if samplelib.Sample(cdf) == 1 {
-				exitingPacket.WriteToCsv(writer, dest_measurement)
+				exitingPacket.WriteToCsv(writer, output_csv)
 				rowCount++
 			}
 			slidingWindow = slidingWindow[1:]
 		}
 	}
 
-	rowCount += slidingwindowlib.EmptySlidingWindow(slidingWindow, writer, cdf, dest_measurement)
+	rowCount += slidingwindowlib.EmptySlidingWindow(slidingWindow, writer, cdf, output_csv)
 
 	// Record the end time
 	endTime := time.Now()
