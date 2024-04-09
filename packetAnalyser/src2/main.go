@@ -39,7 +39,6 @@ func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, calculat
 
 	for kpiName, fn := range calculatorMap {
 		values, error := fn(packets)
-
 		if error != nil {
 			fmt.Println("Error occured! Returning...")
 			return
@@ -65,17 +64,20 @@ func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.Packet, calculat
 
 func main() {
 	var measurementName string
+	var inputCsv string
 
 	flag.StringVar(&measurementName, "m", "test", "Provide an Influx measurement name")
+	flag.StringVar(&inputCsv, "c", "test", "Provide the filepath to the input csv file")
 
 	flag.Parse()
 
-	f, err := os.Open("/home/sebastfu/benchmarking_tool/packetCapturer/testerDenne2.csv")
+	f, err := os.Open(inputCsv)
     if err != nil {
         log.Fatal("Unable to read input file due to " , err)
     }
     defer f.Close()
 	csvReader := csv.NewReader((f))
+
 	packets, err := parselib.ParsePcapToPacketSlice(csvReader)
 
 	if err != nil {
