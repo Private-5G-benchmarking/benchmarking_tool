@@ -3,12 +3,11 @@ package parselib
 import (
 	"encoding/csv"
 	"errors"
+	"fmt"
 	"io"
 	"log"
-	"math"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type PacketInfo struct {
@@ -33,20 +32,15 @@ func (packet PacketInfo) OneWayDelay() (float64, error) {
 // 1. Srcip 2. Dstip 3. Psize 4. Encapsulated_psize 5. Rx_ts 6. Tx_ts
 // 7. Found_match
 func (packet PacketInfo) ConvertToCSVFormat() string {
-	txSec := int64(packet.Tx_ts)
-	txNanosec := int64(math.Mod(packet.Tx_ts, 1) * math.Pow10(9))
-	txTime := time.Unix(txSec, txNanosec)
-	rxSec := int64(packet.Rx_ts)
-	rxNanosec := int64(math.Mod(packet.Rx_ts, 1) * math.Pow10(9))
-	rxTime := time.Unix(rxSec, rxNanosec)
 
 	values := []string{
 		packet.Srcip,
 		packet.Dstip,
 		strconv.Itoa(packet.Psize),
 		strconv.Itoa(packet.Encapsulated_psize),
-		rxTime.String(),
-		txTime.String(),
+		//TODO: could probably use strconv to be more uniform for rx and tx ts.
+		fmt.Sprintf("%f", packet.Rx_ts),
+		fmt.Sprintf("%f", packet.Tx_ts),
 		strconv.FormatBool(packet.Found_match),
 	}
 
@@ -58,7 +52,7 @@ func (packet PacketInfo) ConvertToCSVFormat() string {
 // a timestamp layout to parse the timestamp from the record.
 // It assumes the order of the columns to be 1. Srcip 2. Dstip 3. Psize
 // 4. Encapsulated_psize 5. Rx_ts 6. Tx_ts 7. Found_match
-func parseCSVRecordToPacketInfo(record []string, timestampLayout string) (*PacketInfo, error) {
+func parseCSVRecordToPacketInfo(record []string) (*PacketInfo, error) {
 	srcip := record[0]
 	dstip := record[1]
 	psize := record[2]
@@ -82,14 +76,14 @@ func parseCSVRecordToPacketInfo(record []string, timestampLayout string) (*Packe
 		return nil, err
 	}
 
-	rx_timestamp, err := time.Parse(timestampLayout, rx_ts)
+	rx_ts_ns, err := strconv.ParseFloat(rx_ts, 64)
 	if err != nil {
 		return nil, err
 	}
 	if tx_ts == "" {
 		return nil, errors.New("tx_ts is undefined")
 	}
-	tx_timestamp, err := time.Parse(timestampLayout, tx_ts)
+	tx_ts_ns, err := strconv.ParseFloat(tx_ts, 64)
 	if err != nil {
 		return nil, err
 	}
@@ -107,8 +101,8 @@ func parseCSVRecordToPacketInfo(record []string, timestampLayout string) (*Packe
 		dstip,
 		psize_int,
 		encapsulated_psize_int,
-		convertNanosecondsToSeconds(rx_timestamp.UnixNano()),
-		convertNanosecondsToSeconds(tx_timestamp.UnixNano()),
+		rx_ts_ns,
+		tx_ts_ns,
 		found_match_bool,
 	}
 
@@ -118,9 +112,7 @@ func parseCSVRecordToPacketInfo(record []string, timestampLayout string) (*Packe
 // ParsePcapToPacketSlice accepts an io.Reader object which it expects is
 // connected to a .csv-file with information to be formed into the Packet
 // struct.
-func ParsePcapToPacketInfoSlice(r io.Reader) ([]*PacketInfo, error) {
-	reader := csv.NewReader(r)
-	layout := "2006-01-02 15:04:05.999999999 -0700 MST"
+func ParsePcapToPacketSlice(reader *csv.Reader) ([]*PacketInfo, error) {
 	packets := make([]*PacketInfo, 0)
 
 	i := 0
@@ -139,18 +131,15 @@ func ParsePcapToPacketInfoSlice(r io.Reader) ([]*PacketInfo, error) {
 			continue
 		}
 
-		packet, parseError := parseCSVRecordToPacketInfo(record, layout)
+	packet, parseError := parseCSVRecordToPacketInfo(record)
 
-		if parseError != nil {
-			log.Fatal(parseError)
-		}
 
-		packets = append(packets, packet)
+    if parseError != nil {
+		log.Fatal(parseError)
 	}
 
-	return packets, nil
-}
+	packets = append(packets, packet)
 
-func convertNanosecondsToSeconds(nanoseconds int64) float64 {
-	return float64(nanoseconds) / math.Pow10(9)
+	}
+	return packets, nil
 }

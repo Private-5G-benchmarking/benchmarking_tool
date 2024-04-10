@@ -102,7 +102,7 @@ func calculateRFC3393Jitter(packets []*parselib.PacketInfo) ([]float64, error) {
 		} else {
 			jitter = diff
 		}
-
+    
 		jitters[i] = jitter
 	}
 

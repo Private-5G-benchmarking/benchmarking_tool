@@ -1,11 +1,12 @@
 package main
 
 import (
+	"encoding/csv"
 	"flag"
 	"log"
 	"math"
+	"os"
 	"sort"
-	"strings"
 	"time"
 
 	"benchmarking/packetAnalyzer/calculatorlib"
@@ -34,9 +35,18 @@ func SortPackets(packets []*parselib.PacketInfo, on_rx bool) {
 
 func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.PacketInfo, calculatorMap calculatorlib.PerPacketCalculatorMap, writeAPI api.WriteAPI, measurementName string) {
 	valueMap, error := calculatorlib.CalculatePerPacketKPIs(calculatorMap, packets)
-
+	
 	if error != nil {
 		log.Fatal(error)
+	}
+
+	for kpiName, fn := range calculatorMap {
+		values, error := fn(packets)
+		if error != nil {
+			log.Fatal(error)
+		}
+
+		valueMap[kpiName] = values
 	}
 
 	for index, packet := range packets {
@@ -92,16 +102,21 @@ func calculateAggregateKPIsAndWriteToInflux(packets []*parselib.PacketInfo, calc
 
 func main() {
 	var measurementName string
+	var csvFileName string
 
 	flag.StringVar(&measurementName, "m", "test", "Provide an Influx measurement name")
+	flag.StringVar(&csvFileName, "c", "test", "Provide the filepath to the input csv file")
 
 	flag.Parse()
 
-	p_in := `srcip,dstip,psize,encapsulated_psize,rx_ts,tx_ts,found_match
-	8.8.8.8,8.8.8.9,58,104,2024-03-12 14:20:03.824793711 +0000 UTC,2024-03-12 14:20:03.824624512 +0000 UTC,true
-	8.8.8.8,8.8.8.9,56,104,2024-03-12 14:20:03.834796771 +0000 UTC,2024-03-12 14:20:03.833596771 +0000 UTC,true`
+	f, err := os.Open(csvFileName)
+    if err != nil {
+        log.Fatal("Unable to read input file due to " , err)
+    }
+    defer f.Close()
+	csvReader := csv.NewReader((f))
 
-	packets, err := parselib.ParsePcapToPacketInfoSlice(strings.NewReader(p_in))
+	packets, err := parselib.ParsePcapToPacketSlice(csvReader)
 
 	if err != nil {
 		log.Fatal(err)
@@ -120,14 +135,4 @@ func main() {
 
 	calculatePerPacketKPIsAndWriteToInflux(packets, calculatorlib.GetPerPacketCalculatorMap(), writeAPI, measurementName)
 	calculateAggregateKPIsAndWriteToInflux(packets, calculatorlib.GetAggregateCalculatorMap(), writeAPI, measurementName)
-	// packets := []*parselib.Packet{
-	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 0.004, Tx_ts: 0.003},
-	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 0.005, Tx_ts: 0.004},
-	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 0.006, Tx_ts: 0.005},
-	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 0.007, Tx_ts: 0.006},
-	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 1.001, Tx_ts: 1.000},
-	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 1.007, Tx_ts: 1.006},
-	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 1.007, Tx_ts: 1.006},
-	// 	{Srcip: "1", Dstip: "2", Psize: 56, Encapsulated_psize: 100, Rx_ts: 1.007, Tx_ts: 1.006},
-	// }
 }
