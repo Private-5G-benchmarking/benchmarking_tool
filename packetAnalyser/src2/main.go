@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/csv"
 	"flag"
-	"fmt"
 	"log"
 	"math"
 	"os"
@@ -49,23 +48,16 @@ func calculatePerPacketKPIsAndWriteToInflux(packets []*parselib.PacketInfo, calc
 
 		valueMap[kpiName] = values
 	}
-
 	for index, packet := range packets {
 		numSec := int64(packet.Tx_ts)
 		numNanosec := int64(math.Mod(packet.Tx_ts, 1) * math.Pow10(9))
 		point := influxdb2.NewPointWithMeasurement(measurementName)
 
 		for kpiName, kpi_values := range valueMap {
-			value := kpi_values[index]
-			if value >= 0 {
-				point = point.AddField(kpiName, kpi_values[index])
-			}
+			point = point.AddField(kpiName, kpi_values[index])
 		}
-		if len(point.FieldList()) == 0 {
-			continue
-		}
+
 		point = point.SetTime(time.Unix(numSec, numNanosec))
-		fmt.Println(point.FieldList())
 		writeAPI.WritePoint(point)
 	}
 }
@@ -98,9 +90,10 @@ func calculateAggregateKPIsAndWriteToInflux(packets []*parselib.PacketInfo, calc
 		}
 
 		point = point.SetTime(time.Unix(timeSeconds, 0))
-
+		
 		writeAPI.WritePoint(point)
 	}
+
 }
 
 func main() {
@@ -118,18 +111,14 @@ func main() {
     }
     defer f.Close()
 	csvReader := csv.NewReader((f))
-	fmt.Println("begin parsing packets")
 	packets, err := parselib.ParsePcapToPacketSlice(csvReader)
-	fmt.Println("done parsing packets")
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("sort packets")
 	SortPackets(packets, true)
 
 	clientOptions := influxdb2.DefaultOptions().SetBatchSize(10000).SetPrecision(time.Nanosecond).SetUseGZip(true)
-	fmt.Println("setup influx client")
 	client := influxdb2.NewClientWithOptions("http://localhost:8086", "OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ==", clientOptions)
 	defer client.Close()
 
@@ -137,8 +126,6 @@ func main() {
 	bucket := "5gbenchmarking"
 	writeAPI := client.WriteAPI(org, bucket)
 
-	fmt.Println("begin pr packet kpis")
 	calculatePerPacketKPIsAndWriteToInflux(packets, calculatorlib.GetPerPacketCalculatorMap(), writeAPI, measurementName)
-	fmt.Println("begin aggregate kpis")
 	calculateAggregateKPIsAndWriteToInflux(packets, calculatorlib.GetAggregateCalculatorMap(), writeAPI, measurementName)
 }
