@@ -191,7 +191,7 @@ func calculateAvailability(packets []*parselib.PacketInfo, threshold float32) (m
 		numPacketsCurrentSecond++
 
 		owd, err := packet.OneWayDelay()
-		if err != nil || !packet.Found_match {
+		if err != nil || !packet.Found_match || owd < 0 {
 			continue
 		}
 		if float32(owd) <= threshold {
@@ -203,28 +203,28 @@ func calculateAvailability(packets []*parselib.PacketInfo, threshold float32) (m
 	return availabilities, nil
 }
 
-func getAvailabilityCalculators() map[string]func(packets []*parselib.PacketInfo) (map[int64]float32, error) {
-	thresholds := map[string]float32{
-		"2ms":   0.002,
-		"4ms":   0.004,
-		"8ms":   0.008,
-		"16ms":  0.016,
-		"32ms":  0.032,
-		"64ms":  0.064,
-		"128ms": 0.128,
-	}
+// func getAvailabilityCalculators() map[string]func(packets []*parselib.PacketInfo) (map[int64]float32, error) {
+// 	thresholds := map[string]float32{
+// 		"2ms":   0.002,
+// 		"4ms":   0.004,
+// 		"8ms":   0.008,
+// 		"16ms":  0.016,
+// 		"32ms":  0.032,
+// 		"64ms":  0.064,
+// 		"128ms": 0.128,
+// 	}
 
-	availabilityFuncs := make(map[string]func(packets []*parselib.PacketInfo) (map[int64]float32, error))
+// 	availabilityFuncs := make(map[string]func(packets []*parselib.PacketInfo) (map[int64]float32, error))
 
-	for thresh_str, thresh_val := range thresholds {
-		foo := func(packets []*parselib.PacketInfo) (map[int64]float32, error) {
-			return calculateAvailability(packets, thresh_val)
-		}
-		availabilityFuncs[thresh_str] = foo
-	}
+// 	for thresh_str, thresh_val := range thresholds {
+// 		foo := func(packets []*parselib.PacketInfo) (map[int64]float32, error) {
+// 			return calculateAvailability(packets, thresh_val)
+// 		}
+// 		availabilityFuncs[thresh_str] = foo
+// 	}
 
-	return availabilityFuncs
-}
+// 	return availabilityFuncs
+// }
 
 type PerPacketCalculatorMap map[string]func([]*parselib.PacketInfo) (map[float64]float64, error)
 type AggregateCalculatorMap map[string]func([]*parselib.PacketInfo) (map[int64]float32, error)
@@ -245,12 +245,6 @@ func GetAggregateCalculatorMap() AggregateCalculatorMap {
 
 	m["throughput"] = calculateThroughput
 	m["packet_loss"] = calculatePacketLoss
-
-	availabilityCalculators := getAvailabilityCalculators()
-
-	for calc_name, fn := range availabilityCalculators {
-		m["availability"+calc_name] = fn
-	}
 
 	return m
 }
@@ -282,6 +276,23 @@ func CalculateAggregateKPIs(calculatorMap AggregateCalculatorMap, packets []*par
 		}
 
 		valueMap[kpiName] = values
+	}
+	thresholds := map[string]float32{
+		"2ms":   0.002,
+		"4ms":   0.004,
+		"8ms":   0.008,
+		"16ms":  0.016,
+		"32ms":  0.032,
+		"64ms":  0.064,
+		"128ms": 0.128,
+	}
+	for thresh_str, thresh_val := range thresholds {
+		availabilities, err := calculateAvailability(packets, thresh_val)
+		fmt.Println(thresh_val)
+		if err != nil {
+			return nil, err
+		}
+		valueMap["availability_"+thresh_str] = availabilities
 	}
 
 	return valueMap, nil
