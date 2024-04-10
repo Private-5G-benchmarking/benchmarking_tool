@@ -1,6 +1,6 @@
 # vars.yml
 interface1: enp3s0
-interface2: enp5s0 # enp1s0f1
+interface2: enp1s0f1
 trial_name: cbr_vhigh_bw_low_dur_low_pl
 # packet_amount: 10000000 #TODO
 tshark_duration: 70
