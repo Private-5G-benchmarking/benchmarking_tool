@@ -277,6 +277,7 @@ func CalculateAggregateKPIs(calculatorMap AggregateCalculatorMap, packets []*par
 
 		valueMap[kpiName] = values
 	}
+
 	thresholds := map[string]float32{
 		"2ms":   0.002,
 		"4ms":   0.004,

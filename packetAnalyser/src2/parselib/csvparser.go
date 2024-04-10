@@ -131,14 +131,13 @@ func ParsePcapToPacketSlice(reader *csv.Reader) ([]*PacketInfo, error) {
 			continue
 		}
 
-	packet, parseError := parseCSVRecordToPacketInfo(record)
+		packet, parseError := parseCSVRecordToPacketInfo(record)
 
+		if parseError != nil {
+			log.Fatal(parseError)
+		}
 
-    if parseError != nil {
-		log.Fatal(parseError)
-	}
-
-	packets = append(packets, packet)
+		packets = append(packets, packet)
 
 	}
 	return packets, nil
