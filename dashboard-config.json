@@ -23,1076 +23,1024 @@
   "liveNow": true,
   "panels": [
     {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 0
-      },
-      "hideTimeOverride": false,
-      "id": 18,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-          },
-          "query": "from(bucket: \"5gbenchmarking\")\n  |> range(start: -10d) |> filter(fn: (r) => r._measurement == \"${experiment_name}\" and r._field == \"packet_interarrival_time\") |> keep(columns: [\"_time\", \"_value\"]) |> limit(n: 7500)",
-          "refId": "A"
-        }
-      ],
-      "title": "Time range test",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      },
-      "id": 15,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-          },
-          "query": "from(bucket: \"5gbenchmarking\")\n  |> range(start: -10d) |> filter(fn: (r) => r._measurement == \"${experiment}\" and r._field == \"packet_interarrival_time\") |> keep(columns: [\"_time\", \"_value\"]) |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)\n",
-          "refId": "A"
-        }
-      ],
-      "title": "Packet interarrival time",
-      "type": "timeseries"
-    },
-    {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 16
+        "y": 0
       },
       "id": 12,
-      "panels": [],
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unitScale": true
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 18,
+            "x": 0,
+            "y": 1
+          },
+          "id": 9,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+              },
+              "query": "from(bucket: \"5gbenchmarking\")\n  |> range(start: -20d) |> filter(fn: (r) => r._measurement == \"${experiment}\" and r._field == \"packet_owd\") |> keep(columns: [\"_time\", \"_value\"]) |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)\n",
+              "refId": "A"
+            }
+          ],
+          "title": "Packet OWD",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "s",
+              "unitScale": true
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 18,
+            "y": 1
+          },
+          "id": 3,
+          "options": {
+            "complementary": false,
+            "linewidth": 3,
+            "scaling": 1,
+            "showXGrid": false,
+            "showXThresholds": false,
+            "showYGrid": false,
+            "showYThresholds": false,
+            "xAxisExtents": {
+              "max": "",
+              "min": ""
+            },
+            "xAxisTitle": {
+              "showxoffset": false,
+              "showyoffset": true,
+              "text": "s",
+              "textSize": 12,
+              "yoffset": 30
+            },
+            "xMargins": {
+              "lower": 40,
+              "upper": 10
+            },
+            "xthresholds": {
+              "lowerLabel": "",
+              "upperLanel": ""
+            },
+            "yAxisExtents": {
+              "max": "",
+              "min": ""
+            },
+            "yAxisTitle": {
+              "showxoffset": true,
+              "showyoffset": false,
+              "text": "P(x <= X)",
+              "textSize": 12,
+              "xoffset": 30
+            },
+            "yMargins": {
+              "lower": 40,
+              "upper": 10
+            },
+            "ythresholds": {
+              "lowerLabel": "",
+              "upperLanel": ""
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+              },
+              "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: -10d) |> filter(fn: (r) => r._measurement == \"${experiment}\" and r._field == \"packet_owd\") |> keep(columns: [\"_time\", \"_value\"]) |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)\r\n",
+              "refId": "A"
+            }
+          ],
+          "title": "CDF - Packet owd",
+          "type": "sebastiangunreben-cdf-panel"
+        }
+      ],
       "title": "One-Way Delay",
       "type": "row"
     },
     {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 18,
-        "x": 0,
-        "y": 17
-      },
-      "id": 9,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-          },
-          "query": "from(bucket: \"5gbenchmarking\")\n  |> range(start: -20d) |> filter(fn: (r) => r._measurement == \"${experiment}\" and r._field == \"packet_owd\") |> keep(columns: [\"_time\", \"_value\"]) |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)\n",
-          "refId": "A"
-        }
-      ],
-      "title": "Packet OWD",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "s",
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 18,
-        "y": 17
-      },
-      "id": 3,
-      "options": {
-        "complementary": false,
-        "linewidth": 3,
-        "scaling": 1,
-        "showXGrid": false,
-        "showXThresholds": false,
-        "showYGrid": false,
-        "showYThresholds": false,
-        "xAxisExtents": {
-          "max": "",
-          "min": ""
-        },
-        "xAxisTitle": {
-          "showxoffset": false,
-          "showyoffset": true,
-          "text": "s",
-          "textSize": 12,
-          "yoffset": 30
-        },
-        "xMargins": {
-          "lower": 40,
-          "upper": 10
-        },
-        "xthresholds": {
-          "lowerLabel": "",
-          "upperLanel": ""
-        },
-        "yAxisExtents": {
-          "max": "",
-          "min": ""
-        },
-        "yAxisTitle": {
-          "showxoffset": true,
-          "showyoffset": false,
-          "text": "P(x <= X)",
-          "textSize": 12,
-          "xoffset": 30
-        },
-        "yMargins": {
-          "lower": 40,
-          "upper": 10
-        },
-        "ythresholds": {
-          "lowerLabel": "",
-          "upperLanel": ""
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-          },
-          "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: -10d) |> filter(fn: (r) => r._measurement == \"${experiment}\" and r._field == \"packet_owd\") |> keep(columns: [\"_time\", \"_value\"]) |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)\r\n",
-          "refId": "A"
-        }
-      ],
-      "title": "CDF - Packet owd",
-      "type": "sebastiangunreben-cdf-panel"
-    },
-    {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 25
+        "y": 1
       },
       "id": 11,
-      "panels": [],
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unitScale": true
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 18,
+            "x": 0,
+            "y": 10
+          },
+          "id": 8,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+              },
+              "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: -20d) |> filter(fn: (r) => r._measurement == \"${experiment}\") |> filter(fn: (r) => r._field == \"packet_jitter_weighted\") |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)",
+              "refId": "A"
+            }
+          ],
+          "title": "Packet Jitter",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "max": 0.005,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "s",
+              "unitScale": true
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 18,
+            "y": 10
+          },
+          "id": 2,
+          "options": {
+            "complementary": false,
+            "linewidth": 3,
+            "scaling": 1,
+            "showXGrid": false,
+            "showXThresholds": false,
+            "showYGrid": false,
+            "showYThresholds": false,
+            "xAxisExtents": {
+              "max": "",
+              "min": ""
+            },
+            "xAxisTitle": {
+              "showxoffset": false,
+              "showyoffset": true,
+              "text": "s",
+              "textSize": 12,
+              "yoffset": 30
+            },
+            "xMargins": {
+              "lower": 40,
+              "upper": 10
+            },
+            "xthresholds": {
+              "lowerLabel": "",
+              "upperLanel": ""
+            },
+            "yAxisExtents": {
+              "max": "",
+              "min": ""
+            },
+            "yAxisTitle": {
+              "showxoffset": true,
+              "showyoffset": false,
+              "text": "P(x <= X)",
+              "textSize": 12,
+              "xoffset": 30
+            },
+            "yMargins": {
+              "lower": 40,
+              "upper": 10
+            },
+            "ythresholds": {
+              "lowerLabel": "",
+              "upperLanel": ""
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+              },
+              "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: -20d) |> filter(fn: (r) => r._measurement == \"${experiment}\") |> filter(fn: (r) => r._field == \"packet_jitter_weighted\") |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)",
+              "refId": "A"
+            }
+          ],
+          "title": "CDF - Packet jitter",
+          "type": "sebastiangunreben-cdf-panel"
+        }
+      ],
       "title": "Inter-Packet Delay Variation",
       "type": "row"
     },
     {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 18,
-        "x": 0,
-        "y": 26
-      },
-      "id": 8,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-          },
-          "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: -20d) |> filter(fn: (r) => r._measurement == \"${experiment}\") |> filter(fn: (r) => r._field == \"packet_jitter\") |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)",
-          "refId": "A"
-        }
-      ],
-      "title": "Packet Jitter",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "max": 0.005,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "s",
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 18,
-        "y": 26
-      },
-      "id": 2,
-      "options": {
-        "complementary": false,
-        "linewidth": 3,
-        "scaling": 1,
-        "showXGrid": false,
-        "showXThresholds": false,
-        "showYGrid": false,
-        "showYThresholds": false,
-        "xAxisExtents": {
-          "max": "",
-          "min": ""
-        },
-        "xAxisTitle": {
-          "showxoffset": false,
-          "showyoffset": true,
-          "text": "s",
-          "textSize": 12,
-          "yoffset": 30
-        },
-        "xMargins": {
-          "lower": 40,
-          "upper": 10
-        },
-        "xthresholds": {
-          "lowerLabel": "",
-          "upperLanel": ""
-        },
-        "yAxisExtents": {
-          "max": "",
-          "min": ""
-        },
-        "yAxisTitle": {
-          "showxoffset": true,
-          "showyoffset": false,
-          "text": "P(x <= X)",
-          "textSize": 12,
-          "xoffset": 30
-        },
-        "yMargins": {
-          "lower": 40,
-          "upper": 10
-        },
-        "ythresholds": {
-          "lowerLabel": "",
-          "upperLanel": ""
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-          },
-          "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: -10d) |> filter(fn: (r) => r._measurement == \"${experiment}\" and r._field == \"packet_jitter\") |> keep(columns: [\"_time\", \"_value\"]) |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)\r\n",
-          "refId": "A"
-        }
-      ],
-      "title": "CDF - Packet jitter",
-      "type": "sebastiangunreben-cdf-panel"
-    },
-    {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 2
       },
       "id": 13,
-      "panels": [],
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "s",
+              "unitScale": true
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 19
+          },
+          "id": 7,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+              },
+              "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: -10d) |> filter(fn: (r) => r._measurement == \"${experiment}\") |> filter(fn: (r) => r._field == \"packet_interarrival_time\") |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)",
+              "refId": "A"
+            }
+          ],
+          "title": "Packet Interarrival time",
+          "transformations": [],
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "s",
+              "unitScale": true
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 12,
+            "y": 19
+          },
+          "id": 4,
+          "options": {
+            "complementary": false,
+            "linewidth": 3,
+            "scaling": 1,
+            "showXGrid": false,
+            "showXThresholds": false,
+            "showYGrid": false,
+            "showYThresholds": false,
+            "xAxisExtents": {
+              "max": "",
+              "min": ""
+            },
+            "xAxisTitle": {
+              "showxoffset": false,
+              "showyoffset": true,
+              "text": "s",
+              "textSize": 12,
+              "yoffset": 30
+            },
+            "xMargins": {
+              "lower": 40,
+              "upper": 10
+            },
+            "xthresholds": {
+              "lowerLabel": "",
+              "upperLanel": ""
+            },
+            "yAxisExtents": {
+              "max": "",
+              "min": ""
+            },
+            "yAxisTitle": {
+              "showxoffset": true,
+              "showyoffset": false,
+              "text": "P(x <= X)",
+              "textSize": 12,
+              "xoffset": 30
+            },
+            "yMargins": {
+              "lower": 40,
+              "upper": 10
+            },
+            "ythresholds": {
+              "lowerLabel": "",
+              "upperLanel": ""
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+              },
+              "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: -10) |> filter(fn: (r) => r._measurement == \"${experiment}\" and r._field == \"packet_interarrival_time\") |> keep(columns: [\"_time\", \"_value\"]) |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)\r\n",
+              "refId": "A"
+            }
+          ],
+          "title": "CDF - Packet interarrival time",
+          "type": "sebastiangunreben-cdf-panel"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 2
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "s",
+              "unitScale": true
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 18,
+            "y": 19
+          },
+          "id": 16,
+          "options": {
+            "bucketOffset": 1,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+              },
+              "query": "from(bucket: \"5gbenchmarking\")\n  |> range(start: -10d) |> filter(fn: (r) => r._measurement == \"${experiment}\" and r._field == \"packet_interarrival_time\") |> keep(columns: [\"_time\", \"_value\"]) |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)\n",
+              "refId": "A"
+            }
+          ],
+          "title": "Inter arrival time distribution",
+          "type": "histogram"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "left",
+                "cellOptions": {
+                  "type": "color-text"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "percentunit",
+              "unitScale": true
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 24,
+            "x": 0,
+            "y": 27
+          },
+          "id": 6,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": false,
+                "displayName": "_time"
+              }
+            ]
+          },
+          "pluginVersion": "10.3.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+              },
+              "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: 0) |> filter(fn: (r) => r._measurement == \"${experiment}_aggregate\" and r._field =~ /availability_/) |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")",
+              "refId": "A"
+            }
+          ],
+          "title": "Aggregate measurements",
+          "transformations": [],
+          "type": "table"
+        }
+      ],
       "title": "Inter-Arrival Time",
       "type": "row"
     },
     {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "s",
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 35
-      },
-      "id": 7,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-          },
-          "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: -10d) |> filter(fn: (r) => r._measurement == \"${experiment}\") |> filter(fn: (r) => r._field == \"packet_interarrival_time\") |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)",
-          "refId": "A"
-        }
-      ],
-      "title": "Packet Interarrival time",
-      "transformations": [],
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "s",
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 12,
-        "y": 35
-      },
-      "id": 4,
-      "options": {
-        "complementary": false,
-        "linewidth": 3,
-        "scaling": 1,
-        "showXGrid": false,
-        "showXThresholds": false,
-        "showYGrid": false,
-        "showYThresholds": false,
-        "xAxisExtents": {
-          "max": "",
-          "min": ""
-        },
-        "xAxisTitle": {
-          "showxoffset": false,
-          "showyoffset": true,
-          "text": "s",
-          "textSize": 12,
-          "yoffset": 30
-        },
-        "xMargins": {
-          "lower": 40,
-          "upper": 10
-        },
-        "xthresholds": {
-          "lowerLabel": "",
-          "upperLanel": ""
-        },
-        "yAxisExtents": {
-          "max": "",
-          "min": ""
-        },
-        "yAxisTitle": {
-          "showxoffset": true,
-          "showyoffset": false,
-          "text": "P(x <= X)",
-          "textSize": 12,
-          "xoffset": 30
-        },
-        "yMargins": {
-          "lower": 40,
-          "upper": 10
-        },
-        "ythresholds": {
-          "lowerLabel": "",
-          "upperLanel": ""
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-          },
-          "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: -10) |> filter(fn: (r) => r._measurement == \"${experiment}\" and r._field == \"packet_interarrival_time\") |> keep(columns: [\"_time\", \"_value\"]) |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)\r\n",
-          "refId": "A"
-        }
-      ],
-      "title": "CDF - Packet interarrival time",
-      "type": "sebastiangunreben-cdf-panel"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 2
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          },
-          "unit": "s",
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 18,
-        "y": 35
-      },
-      "id": 16,
-      "options": {
-        "bucketOffset": 1,
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-          },
-          "query": "from(bucket: \"5gbenchmarking\")\n  |> range(start: -10d) |> filter(fn: (r) => r._measurement == \"${experiment}\" and r._field == \"packet_interarrival_time\") |> keep(columns: [\"_time\", \"_value\"]) |> aggregateWindow(every:350ms, fn:mean, createEmpty:false)\n",
-          "refId": "A"
-        }
-      ],
-      "title": "Inter arrival time distribution",
-      "type": "histogram"
-    },
-    {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 43
+        "y": 3
       },
       "id": 17,
-      "panels": [],
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unitScale": true
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 24,
+            "x": 0,
+            "y": 32
+          },
+          "id": 20,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+              },
+              "query": "from(bucket: \"5gbenchmarking\")\n  |> range(start: 0) |> filter(fn: (r) => r._measurement == \"${experiment}_aggregate\" and r._field =~ /availability_/) |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")",
+              "refId": "A"
+            }
+          ],
+          "title": "Availabilities",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "percent",
+              "unitScale": true
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 0,
+            "y": 42
+          },
+          "id": 5,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "pluginVersion": "10.3.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+              },
+              "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: 0) |> filter(fn: (r) => r._measurement == \"${experiment}_aggregate\" and r._field == \"packet_loss\") |> keep(columns: [\"_time\", \"_value\"])\r\n",
+              "refId": "A"
+            }
+          ],
+          "title": "Packet loss",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unitScale": true
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 18,
+            "x": 6,
+            "y": 42
+          },
+          "id": 10,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "10.3.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
+              },
+              "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: 0) |> filter(fn: (r) => r._measurement == \"${experiment}_aggregate\" and r._field == \"throughput\") |> keep(columns: [\"_time\", \"_value\"])\r\n",
+              "refId": "A"
+            }
+          ],
+          "title": "Instantaneous Throughput",
+          "type": "timeseries"
+        }
+      ],
       "title": "Aggregate KPIs",
       "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "percent",
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 44
-      },
-      "id": 5,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^Value$/",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "10.3.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-          },
-          "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: 0) |> filter(fn: (r) => r._measurement == \"${experiment}_aggregate\" and r._field == \"packet_loss\") |> keep(columns: [\"_time\", \"_value\"])\r\n",
-          "refId": "A"
-        }
-      ],
-      "title": "Packet loss",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 44
-      },
-      "id": 10,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^Value$/",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "10.3.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-          },
-          "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: 0) |> filter(fn: (r) => r._measurement == \"${experiment}_aggregate\" and r._field == \"throughput\") |> keep(columns: [\"_time\", \"_value\"])\r\n",
-          "refId": "A"
-        }
-      ],
-      "title": "Average Throughput",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "left",
-            "cellOptions": {
-              "type": "color-text"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "percentunit",
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 24,
-        "x": 0,
-        "y": 52
-      },
-      "id": 6,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": false,
-            "displayName": "_time"
-          }
-        ]
-      },
-      "pluginVersion": "10.3.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "d37775a5-423f-4ab1-9b15-dddce0573317"
-          },
-          "query": "from(bucket: \"5gbenchmarking\")\r\n  |> range(start: 0) |> filter(fn: (r) => r._measurement == \"${experiment}_aggregate\" and r._field =~ /availability_/) |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")",
-          "refId": "A"
-        }
-      ],
-      "title": "Aggregate measurements",
-      "transformations": [],
-      "type": "table"
     }
   ],
-  "refresh": "",
+  "refresh": false,
   "schemaVersion": 39,
   "tags": [],
   "templating": {
@@ -1100,8 +1048,8 @@
       {
         "current": {
           "selected": false,
-          "text": "",
-          "value": ""
+          "text": "cbr_vhigh_bw_low_dur_low_pl_analysis",
+          "value": "cbr_vhigh_bw_low_dur_low_pl_analysis"
         },
         "description": "the name of the experiment you want to see",
         "hide": 0,
@@ -1109,17 +1057,17 @@
         "options": [
           {
             "selected": true,
-            "text": "",
-            "value": ""
+            "text": "cbr_vhigh_bw_low_dur_low_pl_analysis",
+            "value": "cbr_vhigh_bw_low_dur_low_pl_analysis"
           }
         ],
-        "query": "",
+        "query": "cbr_vhigh_bw_low_dur_low_pl_analysis",
         "skipUrlSync": false,
         "type": "textbox"
       },
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "sensor_continuous_low_bw_long_dur_low_pl_analysis",
           "value": "sensor_continuous_low_bw_long_dur_low_pl_analysis"
         },
@@ -1174,8 +1122,8 @@
     ]
   },
   "time": {
-    "from": "now-6h",
-    "to": "now"
+    "from": "2024-04-10T13:08:21.308Z",
+    "to": "2024-04-10T13:09:21.232Z"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -1194,6 +1142,6 @@
   "timezone": "",
   "title": "Benchmarking private 5G",
   "uid": "a59d67fc-36fa-4094-a868-a897a7e20f7a",
-  "version": 47,
+  "version": 54,
   "weekStart": ""
 }
