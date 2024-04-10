@@ -10,7 +10,8 @@
       become: yes
       shell: "{{ item }}"
       with_items:
-        - "sudo influx delete --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking --bucket 5gbenchmarking --start '1970-01-01T00:00:00Z' --stop '2100-01-01T00:00:00Z' --predicate '_measurement={{ trial_name }}'"
+        - "sudo influx delete --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking --bucket 5gbenchmarking --start '1970-01-01T00:00:00Z' --stop '2100-01-01T00:00:00Z' --predicate '_measurement={{ trial_name }}_analysis'"
+        - "sudo influx delete --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking --bucket 5gbenchmarking --start '1970-01-01T00:00:00Z' --stop '2100-01-01T00:00:00Z' --predicate '_measurement={{ trial_name }}_analysis_aggregate'"
         - "sudo influx delete --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking --bucket 5gbenchmarking --start '1970-01-01T00:00:00Z' --stop '2100-01-01T00:00:00Z' --predicate '_measurement=live_counter'"
  
     - name: Start tshark
