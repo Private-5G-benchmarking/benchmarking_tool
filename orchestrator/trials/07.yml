@@ -8,3 +8,4 @@ pps: 50pps # 100pps capped at 50pps to avoid python timeout on influx read befor
 trex_duration: 14400 # 4h
 payload_size: 16
 sample_prob: 1.0
+traf: udp
