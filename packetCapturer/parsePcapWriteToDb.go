@@ -11,6 +11,7 @@ import (
 
 	"packetCapturer/csvlib"
 	"packetCapturer/influxlib"
+	"packetCapturer/matchlib"
 	"packetCapturer/profilinglib"
 	"packetCapturer/samplelib"
 	"packetCapturer/slidingwindowlib"
@@ -58,24 +59,17 @@ func checkIfRelevantPacket(packet gopacket.Packet) bool {
 	return false
 }
 
-func isPacketMatch(parsedPacket map[string]interface{}, p map[string]interface{}) bool {
-	//This is extracted into its own function to make it easier later
-	slidingWindowSnr, slidingWindowPayloadExists := p["sequence_nr"].(string)
-	if slidingWindowPayloadExists && parsedPacket["sequence_nr"] == slidingWindowSnr {
-		return true
-	}
-	return false
-}
-
 func main() {
 	// Setup flag
 	var pcap_loc string
 	var output_csv string
 	var sample_prob float64
+	var traffic_type string
 
 	flag.StringVar(&pcap_loc, "s", "", "Provide a file path for the capture file (.pcap(ng))")
 	flag.StringVar(&output_csv, "c", "", "Provide a name for the output csv file")
 	flag.Float64Var(&sample_prob, "p", 1.0, "Provide a sample probability for writing a packet to Influx")
+	flag.StringVar(&traffic_type, "traf", "udp", "Provide a transport layer protocol to get sequence number for matching")
 
 	flag.Parse()
 
@@ -135,12 +129,12 @@ func main() {
 			continue
 		}
 
-		parsedPacket := influxlib.ProcessPacketToInfluxPoint(packet)
+		parsedPacket := influxlib.ProcessPacketToInfluxPoint(packet, traffic_type)
 
 		matchFound := false
 
 		for index, p := range slidingWindow {
-			if isPacketMatch(parsedPacket, p) {
+			if matchlib.IsPacketMatchSequenceNr(parsedPacket, p) {
 				sample := samplelib.Sample(cdf)
 
 				if sample == 1 {
