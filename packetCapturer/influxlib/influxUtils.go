@@ -1,6 +1,7 @@
 package influxlib
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/google/gopacket"
@@ -37,13 +38,20 @@ func WriteInfluxDBPoint(
 
 // processPacketToInfluxPoint creates a map with keys [src_ip, dst_ip,
 // packet_ts, sequence_nr, psize] all based on the input packet
-func ProcessPacketToInfluxPoint(packet gopacket.Packet) map[string]interface{} {
+func ProcessPacketToInfluxPoint(packet gopacket.Packet, traffic_type string) map[string]interface{} {
 	parsedPacket := make(map[string]interface{})
 	ipLayer := packet.Layer(layers.LayerTypeIPv4)
 	ipPacket, _ := ipLayer.(*layers.IPv4)
 	srcIP := ipPacket.SrcIP.String()
 	dstIP := ipPacket.DstIP.String()
-	sqNr := packetlib.GetSequenceNr(packet)
+	sqNr := ""
+		// This needs to take into account a different sq number if using TCP
+		if traffic_type == "tcp" {
+			sqNr = strconv.FormatUint(uint64(packetlib.GetTCPSequenceNumber(packet)), 10)
+		} else {
+			sqNr = packetlib.GetSequenceNr(packet)
+	
+		}
 	timestamp := packet.Metadata().CaptureInfo.Timestamp
 	packetSize := packet.Metadata().CaptureInfo.CaptureLength
 

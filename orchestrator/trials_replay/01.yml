@@ -7,3 +7,4 @@ filter: ether[78:2]==0x22b8 and ether[80:2]==0x22b7
 tshark_duration: 60 #Do note that for this specific pcap we got from waqas it takes much longer than 60s
 tcpreplay_duration: 65
 sample_prob: 1.0
+traf: udp

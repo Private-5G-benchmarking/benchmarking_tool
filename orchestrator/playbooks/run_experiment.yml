@@ -72,7 +72,7 @@
     - name: Run Go script
       args:
         chdir: /home/shared/benchmarking_tool/packetCapturer
-      shell: "sudo go run /home/shared/benchmarking_tool/packetCapturer/parsePcapWriteToDb.go -s /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -c /home/shared/output_files/csvs/{{ trial_name }}.csv -p {{ sample_prob }}"
+      shell: "sudo go run /home/shared/benchmarking_tool/packetCapturer/parsePcapWriteToDb.go -s /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -c /home/shared/output_files/csvs/{{ trial_name }}.csv -p {{ sample_prob }} -traf {{ traf }}"
       register: go_script_output
 
     - name: Print Go script output

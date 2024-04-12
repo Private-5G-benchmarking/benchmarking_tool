@@ -51,3 +51,28 @@ func GetSequenceNr(packet gopacket.Packet) string {
 	}
 	return sequence_number
 }
+
+func GetTCPSequenceNumber(packet gopacket.Packet) uint32 {
+	//Check if it is a basic TCP packet without encapsulation in GTP
+	tcpLayer := packet.Layer(layers.LayerTypeTCP)
+	if tcpLayer != nil {
+		tcpPacket, _ := tcpLayer.(*layers.TCP)
+		return tcpPacket.Seq
+	}
+
+	//Check if it is a TCP packet encapsulated in GTP
+	gtpLayer := packet.Layer(layers.LayerTypeGTPv1U)
+	if gtpLayer != nil {
+		gtpPacket, _ := gtpLayer.(*layers.GTPv1U)
+
+		// Access the GTP payload
+		gtpPayload := gtpPacket.Payload
+		encapsulatedTCPPacket := gopacket.NewPacket(gtpPayload, layers.LayerTypeIPv4, gopacket.Default)
+		encapsulatedTCPLayer := encapsulatedTCPPacket.Layer(layers.LayerTypeTCP)
+		encapsulatedTCP := encapsulatedTCPLayer.(*layers.TCP)
+		return encapsulatedTCP.Seq
+	}
+
+	//TODO: find a better value her
+	return 0
+}
