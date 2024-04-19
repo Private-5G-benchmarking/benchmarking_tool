@@ -9,8 +9,6 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"packetCapturer/csvlib"
-	"packetCapturer/matchlib"
 	"packetCapturer/packetlib"
 	"packetCapturer/profilinglib"
 	"packetCapturer/samplelib"
@@ -21,15 +19,7 @@ import (
 	"github.com/google/gopacket/pcap"
 )
 
-func removeFromSlice(slidingWindow []*packetlib.ParsedPacket, indexToRemove int) []*packetlib.ParsedPacket {
-	// Ensure the index is within the valid range
-	if indexToRemove < 0 || indexToRemove >= len(slidingWindow) {
-		return slidingWindow
-	}
 
-	// Use append to create a new slice excluding the map at the specified index
-	return append(slidingWindow[:indexToRemove], slidingWindow[indexToRemove+1:]...)
-}
 
 func checkIfRelevantPacket(packet gopacket.Packet) bool {
 	gtpLayer := packet.Layer(layers.LayerTypeGTPv1U)
@@ -77,7 +67,6 @@ func main() {
 	cdf := samplelib.GetBinaryCdf(float32(sample_prob))
 
 	// Start CPU profiling and other performance measurement stuff
-	rowCount := 0
 	totalNrPackets := 0
 	startTime := time.Now()
 
@@ -113,8 +102,8 @@ func main() {
 	// Create a packet source to read packets from the file
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
-	// Creating a list of mixed maps
-	slidingWindow := make([]*packetlib.ParsedPacket, 0)
+	slidingWindow := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}}
+	
 	// Iterate through each packet in the pcap file
 	for packet := range packetSource.Packets() {
 
@@ -125,40 +114,13 @@ func main() {
 			continue
 		}
 
+		//Convert the new packet to an instance of the parsedPacket struct
 		parsedPacket := packetlib.NewParsedPacket(packet, traffic_type)
-		matchFound := false
-
-		for index, p := range slidingWindow {
-			if matchlib.IsPacketMatchSequenceNr(parsedPacket, p) {
-				sample := samplelib.Sample(cdf)
-
-				if sample == 1 {
-					slidingwindowlib.HandlePacketMatch(writer, parsedPacket, p)
-					rowCount++
-				}
-
-				slidingWindow = removeFromSlice(slidingWindow, index)
-				matchFound = true
-				break
-			}
-		}
-		if !matchFound {
-			slidingWindow = append(slidingWindow, parsedPacket)
-		}
-
-		if len(slidingWindow) >= 2000 {
-			exitingElement := slidingWindow[0]
-			exitingPacket := csvlib.NewPacketInfo(exitingElement.SrcIp, exitingElement.DstIp, exitingElement.Psize,exitingElement.Psize,exitingElement.Ts,exitingElement.Ts, false)
-
-			if samplelib.Sample(cdf) == 1 {
-				exitingPacket.WriteToCsv(writer)
-				rowCount++
-			}
-			slidingWindow = slidingWindow[1:]
-		}
+		//Search through the sliding window and handle any potential matches or overflowing window
+		slidingWindow.CheckForMatch(parsedPacket, cdf, writer)
 	}
 
-	rowCount += slidingwindowlib.EmptySlidingWindow(slidingWindow, writer, cdf)
+	slidingWindow.EmptySlidingWindow(writer, cdf)
 
 	// Record the end time
 	endTime := time.Now()
@@ -166,6 +128,5 @@ func main() {
 	// Calculate the duration
 	duration := endTime.Sub(startTime)
 	fmt.Printf("Script took %s to run.\n", duration)
-	fmt.Printf("%d rows written to csv.\n", rowCount)
 	fmt.Printf("%d The total number of packets in pcap is \n", totalNrPackets)
 }
