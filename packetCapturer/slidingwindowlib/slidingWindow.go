@@ -2,41 +2,36 @@ package slidingwindowlib
 
 import (
 	"encoding/csv"
-	"math"
 	"packetCapturer/csvlib"
+	"packetCapturer/packetlib"
 	"packetCapturer/samplelib"
-	"time"
 )
 
 func HandlePacketMatch(
 	writer *csv.Writer,
-	packet map[string]interface{},
-	slidingWindowPacket map[string]interface{},
+	packet *packetlib.ParsedPacket,
+	slidingWindowPacket *packetlib.ParsedPacket,
 ) {
 
-	txTs := slidingWindowPacket["packet_ts"].(time.Time)
-	packetSize := slidingWindowPacket["psize"].(int)
+	packetInfo := csvlib.NewPacketInfo(slidingWindowPacket.SrcIp, slidingWindowPacket.DstIp, slidingWindowPacket.Psize, packet.Psize, packet.Ts, slidingWindowPacket.Ts, true)
 
-	packetStruct := csvlib.NewPacketInfo(slidingWindowPacket["src_ip"].(string), slidingWindowPacket["dst_ip"].(string), packetSize, packet["psize"].(int), packet["packet_ts"].(time.Time), txTs, true)
+	if slidingWindowPacket.Ts >= packet.Ts {
+		packetInfo.Srcip = packet.SrcIp
+		packetInfo.Dstip = packet.DstIp
+		packetInfo.Tx_ts = packet.Ts
+		packetInfo.Rx_ts = slidingWindowPacket.Ts
+		packetInfo.Psize = packet.Psize
+		packetInfo.Encapsulated_psize = slidingWindowPacket.Psize
+	} 
 
-	if !txTs.Before(packet["packet_ts"].(time.Time)) {
-		packetStruct.Srcip = packet["src_ip"].(string)
-		packetStruct.Dstip = packet["dst_ip"].(string)
-		packetStruct.Tx_ts = float64(packet["packet_ts"].(time.Time).UnixNano()) / math.Pow10(9)
-		packetStruct.Rx_ts = float64(txTs.UnixNano()) / math.Pow10(9)
-		packetStruct.Psize = packet["psize"].(int)
-		//TODO this is probably not the correct way to handle this field
-		packetStruct.Encapsulated_psize = packetSize
-
-	}
-	packetStruct.WriteToCsv(writer)
+	packetInfo.WriteToCsv(writer)
 }
 
-func EmptySlidingWindow(slidingWindow []map[string]interface{}, writer *csv.Writer, cdf []float32) int {
+func EmptySlidingWindow(slidingWindow []*packetlib.ParsedPacket, writer *csv.Writer, cdf []float32) int {
 	localRowCount := 0
 
 	for _, p := range slidingWindow {
-		packet := csvlib.NewPacketInfo(p["src_ip"].(string), p["dst_ip"].(string), p["psize"].(int), p["psize"].(int), p["packet_ts"].(time.Time), p["packet_ts"].(time.Time), false)
+		packet := csvlib.NewPacketInfo(p.SrcIp, p.DstIp, p.Psize, p.Psize, p.Ts, p.Ts, false)
 		if samplelib.Sample(cdf) == 1 {
 			packet.WriteToCsv(writer)
 			localRowCount += 1

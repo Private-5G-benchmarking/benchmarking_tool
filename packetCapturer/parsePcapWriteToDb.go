@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"packetCapturer/csvlib"
-	"packetCapturer/influxlib"
 	"packetCapturer/matchlib"
+	"packetCapturer/packetlib"
 	"packetCapturer/profilinglib"
 	"packetCapturer/samplelib"
 	"packetCapturer/slidingwindowlib"
@@ -21,7 +21,7 @@ import (
 	"github.com/google/gopacket/pcap"
 )
 
-func removeFromSlice(slidingWindow []map[string]interface{}, indexToRemove int) []map[string]interface{} {
+func removeFromSlice(slidingWindow []*packetlib.ParsedPacket, indexToRemove int) []*packetlib.ParsedPacket {
 	// Ensure the index is within the valid range
 	if indexToRemove < 0 || indexToRemove >= len(slidingWindow) {
 		return slidingWindow
@@ -114,14 +114,10 @@ func main() {
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
 	// Creating a list of mixed maps
-	slidingWindow := make([]map[string]interface{}, 0)
+	slidingWindow := make([]*packetlib.ParsedPacket, 0)
 	// Iterate through each packet in the pcap file
 	for packet := range packetSource.Packets() {
-		if packet.ErrorLayer() != nil {
-			// Handle the error
-			fmt.Println("Error decoding packet:", packet.ErrorLayer().Error())
-			continue // Skip to the next packet
-		}
+
 		totalNrPackets++
 
 		ipLayer := packet.Layer(layers.LayerTypeIPv4)
@@ -129,8 +125,7 @@ func main() {
 			continue
 		}
 
-		parsedPacket := influxlib.ProcessPacketToInfluxPoint(packet, traffic_type)
-
+		parsedPacket := packetlib.NewParsedPacket(packet, traffic_type)
 		matchFound := false
 
 		for index, p := range slidingWindow {
@@ -153,7 +148,7 @@ func main() {
 
 		if len(slidingWindow) >= 2000 {
 			exitingElement := slidingWindow[0]
-			exitingPacket := csvlib.NewPacketInfo(exitingElement["src_ip"].(string), exitingElement["dst_ip"].(string), exitingElement["psize"].(int),exitingElement["psize"].(int),exitingElement["packet_ts"].(time.Time),exitingElement["packet_ts"].(time.Time), false)
+			exitingPacket := csvlib.NewPacketInfo(exitingElement.SrcIp, exitingElement.DstIp, exitingElement.Psize,exitingElement.Psize,exitingElement.Ts,exitingElement.Ts, false)
 
 			if samplelib.Sample(cdf) == 1 {
 				exitingPacket.WriteToCsv(writer)
