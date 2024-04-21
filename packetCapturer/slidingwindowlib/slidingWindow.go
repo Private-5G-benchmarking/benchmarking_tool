@@ -10,9 +10,10 @@ import (
 
 type SlidingWindow struct {
 	Window		[]*packetlib.ParsedPacket
+	WindowSize	int
 }
 
-func (slidingWindow *SlidingWindow) CheckForMatch(newPacket *packetlib.ParsedPacket, cdf []float32, writer *csv.Writer) {
+func (slidingWindow *SlidingWindow) HandleNewPacket(newPacket *packetlib.ParsedPacket, cdf []float32, writer *csv.Writer) {
 	matchFound := false
 	for index, p := range slidingWindow.Window {
 		if matchlib.IsPacketMatchSequenceNr(newPacket, p) {
@@ -45,7 +46,7 @@ func (slidingWindow *SlidingWindow) CheckForMatch(newPacket *packetlib.ParsedPac
 }
 
 func (slidingWindow SlidingWindow) IsWindowFull() bool {
-	return len(slidingWindow.Window) >= 2000 
+	return len(slidingWindow.Window) >= slidingWindow.WindowSize 
 }
 
 func (slidingWindow SlidingWindow) HandlePacketMatch(

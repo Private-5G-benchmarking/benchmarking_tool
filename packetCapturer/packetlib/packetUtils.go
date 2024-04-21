@@ -20,7 +20,7 @@ type ParsedPacket struct {
 	SequenceNr		   string
 }
 
-func NewParsedPacket(packet gopacket.Packet, traffic_type string) *ParsedPacket {
+func NewParsedPacket(packet gopacket.Packet, l4_protocol string) *ParsedPacket {
 	if packet.ErrorLayer() != nil {
 		log.Fatal("Error decoding packet:", packet.ErrorLayer().Error())
 	}
@@ -32,11 +32,11 @@ func NewParsedPacket(packet gopacket.Packet, traffic_type string) *ParsedPacket 
 
 	sqNr := ""
 		// This needs to take into account a different sq number if using TCP
-		if traffic_type == "tcp" {
-			sqNr = strconv.FormatUint(uint64(GetTCPSequenceNumber(packet)), 10)
-		} else {
-			sqNr = GetSequenceNr(packet)
-		}
+	if l4_protocol == "tcp" {
+		sqNr = strconv.FormatUint(uint64(GetTCPSequenceNumber(packet)), 10)
+	} else {
+		sqNr = GetSequenceNr(packet)
+	}
 
 
 	return &ParsedPacket{

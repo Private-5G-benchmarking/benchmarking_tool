@@ -54,12 +54,12 @@ func main() {
 	var pcap_loc string
 	var output_csv string
 	var sample_prob float64
-	var traffic_type string
+	var l4_protocol string
 
 	flag.StringVar(&pcap_loc, "s", "", "Provide a file path for the capture file (.pcap(ng))")
 	flag.StringVar(&output_csv, "c", "", "Provide a name for the output csv file")
 	flag.Float64Var(&sample_prob, "p", 1.0, "Provide a sample probability for writing a packet to Influx")
-	flag.StringVar(&traffic_type, "traf", "udp", "Provide a transport layer protocol to get sequence number for matching")
+	flag.StringVar(&l4_protocol, "l4", "udp", "Provide a transport layer protocol to get sequence number for matching")
 
 	flag.Parse()
 
@@ -102,7 +102,7 @@ func main() {
 	// Create a packet source to read packets from the file
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
-	slidingWindow := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}}
+	slidingWindow := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:2000}
 	
 	// Iterate through each packet in the pcap file
 	for packet := range packetSource.Packets() {
@@ -115,9 +115,9 @@ func main() {
 		}
 
 		//Convert the new packet to an instance of the parsedPacket struct
-		parsedPacket := packetlib.NewParsedPacket(packet, traffic_type)
+		parsedPacket := packetlib.NewParsedPacket(packet, l4_protocol)
 		//Search through the sliding window and handle any potential matches or overflowing window
-		slidingWindow.CheckForMatch(parsedPacket, cdf, writer)
+		slidingWindow.HandleNewPacket(parsedPacket, cdf, writer)
 	}
 
 	slidingWindow.EmptySlidingWindow(writer, cdf)
