@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"flag"
 	"log"
+	"strconv"
 	"math"
 	"os"
 	"sort"
@@ -110,6 +111,8 @@ func main() {
 
 	flag.Parse()
 
+	startTime := time.Now()
+
 	f, err := os.Open(csvFileName)
 	if err != nil {
 		log.Fatal("Unable to read input file due to ", err)
@@ -136,4 +139,23 @@ func main() {
 
 	calculatePerPacketKPIsAndWriteToInflux(packets, calculatorlib.GetPerPacketCalculatorMap(), writeAPI, measurementName)
 	calculateAggregateKPIsAndWriteToInflux(packets, calculatorlib.GetAggregateCalculatorMap(), writeAPI, measurementName)
+
+	durationMilli := time.Now().Sub(startTime).Milliseconds()
+	totalNrPackets := len(packets)
+
+	profile_csv, profile_err := os.OpenFile("/home/shared/output_files/profiling/analyzer.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if profile_err != nil {
+		log.Fatal("Could not open CSV file: ", profile_err)
+	}
+	defer profile_csv.Close()
+
+	profile_writer := csv.NewWriter(profile_csv)
+	defer profile_writer.Flush()
+	data := []string{strconv.Itoa(totalNrPackets), strconv.FormatInt(durationMilli, 10)}
+
+	write_err := profile_writer.Write(data)
+	if write_err != nil {
+		log.Fatal("Could not write to csv file: ", write_err)
+	}
 }
+
