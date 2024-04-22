@@ -102,7 +102,7 @@ func main() {
 	// Create a packet source to read packets from the file
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
-	slidingWindow := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:2000}
+	slidingWindow := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:20000}
 	
 	// Iterate through each packet in the pcap file
 	for packet := range packetSource.Packets() {
