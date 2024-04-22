@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
+	"strconv"
 	"log"
 	"os"
 	"runtime/pprof"
@@ -129,4 +130,23 @@ func main() {
 	duration := endTime.Sub(startTime)
 	fmt.Printf("Script took %s to run.\n", duration)
 	fmt.Printf("%d The total number of packets in pcap is \n", totalNrPackets)
+
+	durationMilli := duration.Milliseconds()
+
+	profile_csv, profile_err := os.OpenFile("/home/shared/output_files/profiling/matcher.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if profile_err != nil {
+		log.Fatal("Could not open CSV file: ", profile_err)
+	}
+	defer profile_csv.Close()
+
+	profile_writer := csv.NewWriter(profile_csv)
+	defer profile_writer.Flush()
+	data := []string{strconv.Itoa(totalNrPackets), strconv.FormatInt(durationMilli, 10)}
+
+	write_err := profile_writer.Write(data)
+	if err != nil {
+		log.Fatal("Could not write to csv file: ", write_err)
+	}
+	
 }
+
