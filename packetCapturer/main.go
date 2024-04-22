@@ -141,12 +141,11 @@ func main() {
 
 	profile_writer := csv.NewWriter(profile_csv)
 	defer profile_writer.Flush()
-	data := []string{strconv.Itoa(totalNrPackets), strconv.FormatInt(durationMilli, 10)}
+	data := []string{strconv.Itoa(totalNrPackets), strconv.FormatInt(durationMilli, 10), strconv.Itoa(slidingWindow.WindowSize)}
 
 	write_err := profile_writer.Write(data)
-	if err != nil {
+	if write_err != nil {
 		log.Fatal("Could not write to csv file: ", write_err)
 	}
-	
 }
 
