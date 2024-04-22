@@ -8,4 +8,4 @@ pps: 17000pps
 trex_duration: 60  # 1 min
 payload_size: 16
 sample_prob: 1.0
-traf: udp
+l4: udp

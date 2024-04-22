@@ -4,8 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
-	"math"
-	"time"
 )
 
 type PacketInfo struct {
@@ -18,14 +16,14 @@ type PacketInfo struct {
 	Found_match        bool
 }
 
-func NewPacketInfo(Srcip string, Dstip string, Psize int, Enccapsulated_psize int, Rx_ts time.Time, Tx_ts time.Time, Found_match bool) *PacketInfo {
+func NewPacketInfo(SrcIp string, DstIp string, Psize int, Enccapsulated_psize int, Rx_ts float64, Tx_ts float64, Found_match bool) *PacketInfo {
 	return &PacketInfo{
-		Srcip: Srcip,
-		Dstip: Dstip,
+		Srcip: SrcIp,
+		Dstip: DstIp,
 		Psize: Psize,
 		Encapsulated_psize: Enccapsulated_psize,
-		Rx_ts: convertNanosecondsToSeconds(Rx_ts),
-		Tx_ts: convertNanosecondsToSeconds(Tx_ts),
+		Rx_ts: Rx_ts,
+		Tx_ts: Tx_ts,
 		Found_match: Found_match,
 	}
 }
@@ -46,8 +44,4 @@ func (packet PacketInfo) WriteToCsv(writer *csv.Writer) {
 		log.Fatalln("error writing record to file", err)
 	}
 
-}
-
-func convertNanosecondsToSeconds(timestamp time.Time) float64 {
-	return float64(timestamp.UnixNano()) / math.Pow10(9)
 }

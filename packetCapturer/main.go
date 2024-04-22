@@ -9,9 +9,7 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"packetCapturer/csvlib"
-	"packetCapturer/influxlib"
-	"packetCapturer/matchlib"
+	"packetCapturer/packetlib"
 	"packetCapturer/profilinglib"
 	"packetCapturer/samplelib"
 	"packetCapturer/slidingwindowlib"
@@ -21,15 +19,7 @@ import (
 	"github.com/google/gopacket/pcap"
 )
 
-func removeFromSlice(slidingWindow []map[string]interface{}, indexToRemove int) []map[string]interface{} {
-	// Ensure the index is within the valid range
-	if indexToRemove < 0 || indexToRemove >= len(slidingWindow) {
-		return slidingWindow
-	}
 
-	// Use append to create a new slice excluding the map at the specified index
-	return append(slidingWindow[:indexToRemove], slidingWindow[indexToRemove+1:]...)
-}
 
 func checkIfRelevantPacket(packet gopacket.Packet) bool {
 	gtpLayer := packet.Layer(layers.LayerTypeGTPv1U)
@@ -64,12 +54,12 @@ func main() {
 	var pcap_loc string
 	var output_csv string
 	var sample_prob float64
-	var traffic_type string
+	var l4_protocol string
 
 	flag.StringVar(&pcap_loc, "s", "", "Provide a file path for the capture file (.pcap(ng))")
 	flag.StringVar(&output_csv, "c", "", "Provide a name for the output csv file")
 	flag.Float64Var(&sample_prob, "p", 1.0, "Provide a sample probability for writing a packet to Influx")
-	flag.StringVar(&traffic_type, "traf", "udp", "Provide a transport layer protocol to get sequence number for matching")
+	flag.StringVar(&l4_protocol, "l4", "udp", "Provide a transport layer protocol to get sequence number for matching")
 
 	flag.Parse()
 
@@ -77,7 +67,6 @@ func main() {
 	cdf := samplelib.GetBinaryCdf(float32(sample_prob))
 
 	// Start CPU profiling and other performance measurement stuff
-	rowCount := 0
 	totalNrPackets := 0
 	startTime := time.Now()
 
@@ -113,15 +102,11 @@ func main() {
 	// Create a packet source to read packets from the file
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
-	// Creating a list of mixed maps
-	slidingWindow := make([]map[string]interface{}, 0)
+	slidingWindow := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:20000}
+	
 	// Iterate through each packet in the pcap file
 	for packet := range packetSource.Packets() {
-		if packet.ErrorLayer() != nil {
-			// Handle the error
-			fmt.Println("Error decoding packet:", packet.ErrorLayer().Error())
-			continue // Skip to the next packet
-		}
+
 		totalNrPackets++
 
 		ipLayer := packet.Layer(layers.LayerTypeIPv4)
@@ -129,41 +114,13 @@ func main() {
 			continue
 		}
 
-		parsedPacket := influxlib.ProcessPacketToInfluxPoint(packet, traffic_type)
-
-		matchFound := false
-
-		for index, p := range slidingWindow {
-			if matchlib.IsPacketMatchSequenceNr(parsedPacket, p) {
-				sample := samplelib.Sample(cdf)
-
-				if sample == 1 {
-					slidingwindowlib.HandlePacketMatch(writer, parsedPacket, p)
-					rowCount++
-				}
-
-				slidingWindow = removeFromSlice(slidingWindow, index)
-				matchFound = true
-				break
-			}
-		}
-		if !matchFound {
-			slidingWindow = append(slidingWindow, parsedPacket)
-		}
-
-		if len(slidingWindow) >= 2000 {
-			exitingElement := slidingWindow[0]
-			exitingPacket := csvlib.NewPacketInfo(exitingElement["src_ip"].(string), exitingElement["dst_ip"].(string), exitingElement["psize"].(int),exitingElement["psize"].(int),exitingElement["packet_ts"].(time.Time),exitingElement["packet_ts"].(time.Time), false)
-
-			if samplelib.Sample(cdf) == 1 {
-				exitingPacket.WriteToCsv(writer)
-				rowCount++
-			}
-			slidingWindow = slidingWindow[1:]
-		}
+		//Convert the new packet to an instance of the parsedPacket struct
+		parsedPacket := packetlib.NewParsedPacket(packet, l4_protocol)
+		//Search through the sliding window and handle any potential matches or overflowing window
+		slidingWindow.HandleNewPacket(parsedPacket, cdf, writer)
 	}
 
-	rowCount += slidingwindowlib.EmptySlidingWindow(slidingWindow, writer, cdf)
+	slidingWindow.EmptySlidingWindow(writer, cdf)
 
 	// Record the end time
 	endTime := time.Now()
@@ -171,6 +128,5 @@ func main() {
 	// Calculate the duration
 	duration := endTime.Sub(startTime)
 	fmt.Printf("Script took %s to run.\n", duration)
-	fmt.Printf("%d rows written to csv.\n", rowCount)
 	fmt.Printf("%d The total number of packets in pcap is \n", totalNrPackets)
 }

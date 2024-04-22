@@ -3,10 +3,50 @@ package packetlib
 
 import (
 	"fmt"
+	"log"
+	"math"
+	"strconv"
+	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 )
+
+type ParsedPacket struct {
+	SrcIp              string
+	DstIp              string
+	Psize              int
+	Ts                 float64 // Format: seconds with nanosecond precision
+	SequenceNr		   string
+}
+
+func NewParsedPacket(packet gopacket.Packet, l4_protocol string) *ParsedPacket {
+	if packet.ErrorLayer() != nil {
+		log.Fatal("Error decoding packet:", packet.ErrorLayer().Error())
+	}
+
+	//TODO add some error handling here
+
+	ipLayer := packet.Layer(layers.LayerTypeIPv4)
+	ipPacket, _ := ipLayer.(*layers.IPv4)
+
+	sqNr := ""
+		// This needs to take into account a different sq number if using TCP
+	if l4_protocol == "tcp" {
+		sqNr = strconv.FormatUint(uint64(GetTCPSequenceNumber(packet)), 10)
+	} else {
+		sqNr = GetSequenceNr(packet)
+	}
+
+
+	return &ParsedPacket{
+		SrcIp: ipPacket.SrcIP.String(),
+		DstIp: ipPacket.DstIP.String(),
+		Ts: ConvertNanosecondsToSeconds(packet.Metadata().Timestamp),
+		Psize: packet.Metadata().CaptureLength,
+		SequenceNr: sqNr,
+	}
+}
 
 // extractSubstring removes the first 16 characters of a string
 func ExtractSubstring(input string) (string, error) {
@@ -75,4 +115,9 @@ func GetTCPSequenceNumber(packet gopacket.Packet) uint32 {
 
 	//TODO: find a better value her
 	return 0
+}
+
+
+func ConvertNanosecondsToSeconds(timestamp time.Time) float64 {
+	return float64(timestamp.UnixNano()) / math.Pow10(9)
 }

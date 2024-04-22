@@ -1,8 +1,10 @@
 // packetlib provides utility functions for processing and comparing packets
 package matchlib
 
+import "packetCapturer/packetlib"
 
-func IsPacketMatchSequenceNr(parsedPacket map[string]interface{}, p map[string]interface{}) bool {
+
+func IsPacketMatchSequenceNr(parsedPacket *packetlib.ParsedPacket, p *packetlib.ParsedPacket) bool {
 	//This is extracted into its own function to make it easier later
-	return p["sequence_nr"] == parsedPacket["sequence_nr"] 
+	return p.SequenceNr == parsedPacket.SequenceNr 
 }
