@@ -95,16 +95,16 @@
       become: yes
       shell: "{{ item }}"
       with_items:
-        - "influx query 'from(bucket: "5gbenchmarking") |> range(start: 0) |> filter(fn: (r) => r._measurement == "{{ trial_name }}_analysis")' --raw > /home/shared/validation_backups/influx/base_case/{{ trial_name }}.csv"
-        - "influx query 'from(bucket: "5gbenchmarking") |> range(start: 0) |> filter(fn: (r) => r._measurement == "{{ trial_name }}_analysis_aggregate")' --raw > /home/shared/validation_backups/influx/base_case/{{ trial_name }}_aggregate.csv"
+        - "influx query --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking 'from(bucket: \"5gbenchmarking\") |> range(start: 0) |> filter(fn: (r) => r._measurement == \"{{ trial_name }}_analysis\")' --raw > /home/shared/validation_backups/influx/base_case/{{ trial_name }}.csv"
+        - "influx query --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking 'from(bucket: \"5gbenchmarking\") |> range(start: 0) |> filter(fn: (r) => r._measurement == \"{{ trial_name }}_analysis_aggregate\")' --raw > /home/shared/validation_backups/influx/base_case/{{ trial_name }}_aggregate.csv"
 
-    - name: Copy pacp for validation
+    - name: Copy pcap for validation
       become: yes
       shell: "cp /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng /home/shared/validation_backups/pcaps/base_case/{{ trial_name }}.pcapng"
 
     - name: Copy matched csv for validation
       become: yes
-      shell: "cp /home/shared/output_files/csvs/{{ trial_name }}.csv /home/shared/validation_backups/csvs/base_case/{{ trial_name }}.csv"
+      shell: "cp /home/shared/output_files/csvs/{{ trial_name }}.csv /home/shared/validation_backups/csv/base_case/{{ trial_name }}.csv"
 
     - name: Kill t-rex process
       command: "pkill t-rex-64"
