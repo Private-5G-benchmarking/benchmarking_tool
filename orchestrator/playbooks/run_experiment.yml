@@ -91,6 +91,13 @@
       shell: "sudo go run /home/shared/benchmarking_tool/packetAnalyser/src2/main.go -c /home/shared/output_files/csvs/{{ trial_name }}.csv -m {{ trial_name }}_analysis"
       register: analytics_output
 
+    - name: Dump influx for validation
+      become: yes
+      shell: "{{ item }}"
+      with_items:
+        - "influx query 'from(bucket: "5gbenchmarking") |> range(start: 0) |> filter(fn: (r) => r._measurement == "sensor_continuous_low_bw_long_dur_low_pl_analysis")' --raw > /home/shared/validation_backups/influx/base_case/{{ trial_name }}.csv"
+        - "influx query 'from(bucket: "5gbenchmarking") |> range(start: 0) |> filter(fn: (r) => r._measurement == "sensor_continuous_low_bw_long_dur_low_pl_analysis_aggregate")' --raw > /home/shared/validation_backups/influx/base_case/{{ trial_name }}_aggregate.csv"
+
     - name: Kill t-rex process
       command: "pkill t-rex-64"
       delegate_to: 129.241.200.231
