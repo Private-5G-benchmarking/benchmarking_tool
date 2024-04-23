@@ -1,12 +1,12 @@
 # vars.yml
-interface1: enp3s0
-interface2: enp1s0f1
+interface1: enp5s0 #enp3s0
+interface2: enp3s0 #enp1s0f1
 # output_file_path: /home/shared/output_files/pcaps/sensor_continuous_low_bw_long_dur_low_pl.pcapng
 trial_name: cbr_med_bw_med_dur_low_pl
 # analysis_name: sensor_continuous_low_bw_long_dur_low_pl_analysis
 # packet_amount: 10000000 #TODO
 tshark_duration: 610
-pps: 1500pps # 5000pps capped at 1500 to limit total packet amount before sampling is implemented
+pps: 5000pps
 trex_duration: 600  # 10 min
 payload_size: 16
 sample_prob: 1.0
