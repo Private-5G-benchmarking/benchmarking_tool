@@ -10,11 +10,11 @@ PSIZE, ENCAPSULATED_PSIZE = 58, 102
 
 def generate_df(columns, row_count, tx_mu, tx_sigma, owd_mu, owd_sigma, not_loss_prob):
     rows = []
-    tx_normal_dist = np.random.normal(loc=tx_mu, scale=tx_sigma, size=(row_count))
+    # tx_normal_dist = np.random.normal(loc=tx_mu, scale=tx_sigma, size=(row_count))
     owd_normal_dist = np.random.normal(loc=owd_mu, scale=owd_sigma, size=(row_count))
 
     for i in range(row_count):
-        tx_ts = Tx_ts(i) + tx_normal_dist[i]
+        tx_ts = Tx_ts(i) #+ tx_normal_dist[i]
         rx_ts = tx_ts + owd_normal_dist[i]
         found_match = 'true' if Found_match(not_loss_prob) else 'false'
         rows.append([SRCIP, DSTIP, PSIZE, ENCAPSULATED_PSIZE, rx_ts, tx_ts, found_match])
@@ -23,7 +23,7 @@ def generate_df(columns, row_count, tx_mu, tx_sigma, owd_mu, owd_sigma, not_loss
 
 
 def Tx_ts(i):
-    return i * 0.001 + 1 # i multiplied by iat=0.001
+    return i * 0.001 # i multiplied by iat=0.001
 
 def Found_match(prob):
     return np.random.rand() < prob
