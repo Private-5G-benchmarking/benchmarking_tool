@@ -55,11 +55,11 @@
       delay: 30
 
     - name: Check for corrupt packets
-      shell: pcapfix -n -o /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng # TODO: filename
+      shell: pcapfix -n -o /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng
 
     - name: Check if fixed pcap exists
       stat:
-        path: /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng # TODO: filename
+        path: /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng
       register: stat_result
 
     - name: Rename corrupt and fixed pcap-files 
@@ -95,8 +95,16 @@
       become: yes
       shell: "{{ item }}"
       with_items:
-        - "influx query 'from(bucket: "5gbenchmarking") |> range(start: 0) |> filter(fn: (r) => r._measurement == "sensor_continuous_low_bw_long_dur_low_pl_analysis")' --raw > /home/shared/validation_backups/influx/base_case/{{ trial_name }}.csv"
-        - "influx query 'from(bucket: "5gbenchmarking") |> range(start: 0) |> filter(fn: (r) => r._measurement == "sensor_continuous_low_bw_long_dur_low_pl_analysis_aggregate")' --raw > /home/shared/validation_backups/influx/base_case/{{ trial_name }}_aggregate.csv"
+        - "influx query 'from(bucket: "5gbenchmarking") |> range(start: 0) |> filter(fn: (r) => r._measurement == "{{ trial_name }}_analysis")' --raw > /home/shared/validation_backups/influx/base_case/{{ trial_name }}.csv"
+        - "influx query 'from(bucket: "5gbenchmarking") |> range(start: 0) |> filter(fn: (r) => r._measurement == "{{ trial_name }}_analysis_aggregate")' --raw > /home/shared/validation_backups/influx/base_case/{{ trial_name }}_aggregate.csv"
+
+    - name: Copy pacp for validation
+      become: yes
+      shell: "cp /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng /home/shared/validation_backups/pcaps/base_case/{{ trial_name }}.pcapng"
+
+    - name: Copy matched csv for validation
+      become: yes
+      shell: "cp /home/shared/output_files/csvs/{{ trial_name }}.csv /home/shared/validation_backups/csvs/base_case/{{ trial_name }}.csv"
 
     - name: Kill t-rex process
       command: "pkill t-rex-64"
