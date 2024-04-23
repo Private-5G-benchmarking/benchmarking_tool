@@ -55,11 +55,11 @@
       delay: 30
 
     - name: Check for corrupt packets
-      shell: pcapfix -n -o /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng # TODO: filename
+      shell: pcapfix -n -o /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng
 
     - name: Check if fixed pcap exists
       stat:
-        path: /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng # TODO: filename
+        path: /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng
       register: stat_result
 
     - name: Rename corrupt and fixed pcap-files 
@@ -71,7 +71,7 @@
 
     - name: Run Go script
       args:
-        chdir: /home/sebastfu/benchmarking_tool/packetCapturer
+        chdir: /home/shared/benchmarking_tool/packetCapturer
       shell: "sudo go run /home/shared/benchmarking_tool/packetCapturer/main.go -s /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -c /home/shared/output_files/csvs/{{ trial_name }}.csv -p {{ sample_prob }} -l4 {{ l4 }}"
       register: go_script_output
 
@@ -90,6 +90,21 @@
         chdir: /home/shared/benchmarking_tool/packetAnalyser/src2
       shell: "sudo go run /home/shared/benchmarking_tool/packetAnalyser/src2/main.go -c /home/shared/output_files/csvs/{{ trial_name }}.csv -m {{ trial_name }}_analysis"
       register: analytics_output
+
+    - name: Dump influx for validation
+      become: yes
+      shell: "{{ item }}"
+      with_items:
+        - "influx query --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking 'from(bucket: \"5gbenchmarking\") |> range(start: 0) |> filter(fn: (r) => r._measurement == \"{{ trial_name }}_analysis\") |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")' --raw > /home/shared/validation_backups/influx/base_case/{{ trial_name }}.csv"
+        - "influx query --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking 'from(bucket: \"5gbenchmarking\") |> range(start: 0) |> filter(fn: (r) => r._measurement == \"{{ trial_name }}_analysis_aggregate\") |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")' --raw > /home/shared/validation_backups/influx/base_case/{{ trial_name }}_aggregate.csv"
+
+    - name: Copy pcap for validation
+      become: yes
+      shell: "cp /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng /home/shared/validation_backups/pcaps/base_case/{{ trial_name }}.pcapng"
+
+    - name: Copy matched csv for validation
+      become: yes
+      shell: "cp /home/shared/output_files/csvs/{{ trial_name }}.csv /home/shared/validation_backups/csv/base_case/{{ trial_name }}.csv"
 
     - name: Kill t-rex process
       command: "pkill t-rex-64"
