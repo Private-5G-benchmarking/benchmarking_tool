@@ -29,7 +29,7 @@ def Found_match(prob):
     return np.random.rand() < prob
 
 if __name__ == '__main__':
-    FILE_PATH = "/home/shared/validation_files/csvs/"
+    FILE_PATH = "/home/shared/validation_files/csvs"
     csv_configs = {
         '1': {
             'columns': COLUMNS,
@@ -46,7 +46,7 @@ if __name__ == '__main__':
             'tx_mu': 0,
             'tx_sigma': 0.0004,
             'owd_mu': 0.032,
-            'owd_sigma': 0.025,
+            'owd_sigma': 0.0075,
             'not_loss_prob': 0.95
         },
         '3': {
@@ -55,7 +55,7 @@ if __name__ == '__main__':
             'tx_mu': 0,
             'tx_sigma': 0.0008,
             'owd_mu': 0.02,
-            'owd_sigma': 0.05,
+            'owd_sigma': 0.02,
             'not_loss_prob': 0.8
         },
     }
