@@ -7,18 +7,18 @@
   tasks:
     - name: Start tshark
       become: yes
-      shell: "tshark -i enp3s0 -a duration:15 -w /opt/hallo/output_files/pcaps/validate_bridge.pcapng"
-      async: "{{ (15+10)|int|abs }}"
+      shell: "tshark -i enp3s0 -a duration:60 -w /opt/hallo/output_files/pcaps/validate_bridge.pcapng"
+      async: "{{ (60+10)|int|abs }}"
       poll: 0
       register: tshark
 
-    # - name: Generate traffic
-    #   become: yes
-    #   async: "{{ (trex_duration+10)|int|abs }}" 
-    #   poll: 0 # start the task in the background and move on to the next task without waiting for completion
-    #   shell: python3 /opt/trex/v3.04/automation/trex_control_plane/interactive/trex/examples/stl/my-automation-test.py -m {{ pps }} -d {{ trex_duration }} --payload_size {{ payload_size }}
-    #   register: traffgen_output
-    #   delegate_to: 129.241.200.231
+    - name: Generate traffic
+      become: yes
+      async: "{{ (60+10)|int|abs }}" 
+      poll: 0 # start the task in the background and move on to the next task without waiting for completion
+      shell: python3 /opt/trex/v3.04/automation/trex_control_plane/interactive/trex/examples/stl/my-automation-test.py -m {{ pps }}pps -d 60 --payload_size 16
+      register: traffgen_output
+      delegate_to: 129.241.200.231
 
 
     - name: Wait for tshark to complete
