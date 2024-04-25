@@ -1,0 +1,42 @@
+---
+# Run with ansible-playbook playbook_name.yml --extra-vars "@file_path_to_vars_file"
+- name: Validate bridge
+  become: true
+  hosts: localhost
+
+  tasks:
+    - name: Start tshark
+      become: yes
+      shell: "tshark -i enp3s0 -a duration:15 -w /opt/hallo/output_files/pcaps/validate_bridge.pcapng"
+      async: "{{ (15+10)|int|abs }}"
+      poll: 0
+      register: tshark
+
+    # - name: Generate traffic
+    #   become: yes
+    #   async: "{{ (trex_duration+10)|int|abs }}" 
+    #   poll: 0 # start the task in the background and move on to the next task without waiting for completion
+    #   shell: python3 /opt/trex/v3.04/automation/trex_control_plane/interactive/trex/examples/stl/my-automation-test.py -m {{ pps }} -d {{ trex_duration }} --payload_size {{ payload_size }}
+    #   register: traffgen_output
+    #   delegate_to: 129.241.200.231
+
+
+    - name: Wait for tshark to complete
+      async_status:
+        jid: "{{ tshark.ansible_job_id }}"
+      register: tshark_result
+      until: tshark_result.finished
+      retries: 15
+      delay: 10
+
+    - name: Count packets
+      become: yes
+      shell: tshark -r /opt/hallo/output_files/pcaps/validate_bridge.pcapng | wc -l
+      register: number_of_packets
+
+    - name: Append packet count to CSV file
+      lineinfile:
+        path: /home/shared/validation_backups/sensitivity_analysis_bridge/results_16.csv
+        line: "{{ pps }}, {{ number_of_packets.stdout }}"
+        create: yes
+      become: true
