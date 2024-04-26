@@ -5,12 +5,19 @@
   hosts: localhost
 
   tasks:
-    - name: Start tshark
+    - name: Start tshark ingres
       become: yes
-      shell: "tshark -i enp3s0 -a duration:60 -w /opt/hallo/output_files/pcaps/validate_bridge.pcapng"
+      shell: "tshark -i enp5s0 -f 'udp port 8000' -a duration:60 -w /opt/hallo/output_files/pcaps/validate_bridge_ingres.pcapng"
       async: "{{ (60+10)|int|abs }}"
       poll: 0
-      register: tshark
+      register: tshark_ingres
+
+    - name: Start tshark egres
+      become: yes
+      shell: "tshark -i enp3s0 -f 'udp port 8000' -a duration:60 -w /opt/hallo/output_files/pcaps/validate_bridge_egres.pcapng"
+      async: "{{ (60+10)|int|abs }}"
+      poll: 0
+      register: tshark_egres
 
     - name: Generate traffic
       become: yes
@@ -21,22 +28,35 @@
       delegate_to: 129.241.200.231
 
 
-    - name: Wait for tshark to complete
+    - name: Wait for tshark ingres to complete
       async_status:
-        jid: "{{ tshark.ansible_job_id }}"
-      register: tshark_result
-      until: tshark_result.finished
+        jid: "{{ tshark_ingres.ansible_job_id }}"
+      register: tshark_ingres_result
+      until: tshark_ingres_result.finished
       retries: 15
       delay: 10
 
-    - name: Count packets
+    - name: Wait for tshark egres to complete
+      async_status:
+        jid: "{{ tshark_egres.ansible_job_id }}"
+      register: tshark_egres_result
+      until: tshark_egres_result.finished
+      retries: 15
+      delay: 10
+
+    - name: Count packets ingres
       become: yes
-      shell: tshark -r /opt/hallo/output_files/pcaps/validate_bridge.pcapng | wc -l
-      register: number_of_packets
+      shell: tshark -r /opt/hallo/output_files/pcaps/validate_bridge_ingres.pcapng | wc -l
+      register: number_of_packets_ingres
+
+    - name: Count packets egres
+      become: yes
+      shell: tshark -r /opt/hallo/output_files/pcaps/validate_bridge_egres.pcapng | wc -l
+      register: number_of_packets_egres
 
     - name: Append packet count to CSV file
       lineinfile:
         path: /home/shared/validation_backups/sensitivity_analysis_bridge/results_16.csv
-        line: "{{ pps }}, {{ number_of_packets.stdout }}"
+        line: "{{ pps }}, {{ number_of_packets_ingres.stdout }}, {{ number_of_packets_egres.stdout }}"
         create: yes
       become: true
