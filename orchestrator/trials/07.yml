@@ -1,10 +1,10 @@
 # vars.yml
-interface1: enp3s0
-interface2: enp5s0 # enp1s0f1
+interface1: enp5s0 #enp3s0
+interface2: enp3s0 # enp1s0f1
 trial_name: sensor_continuous_low_bw_xlong_dur_low_pl
 # packet_amount: 10000000 #TODO
 tshark_duration: 14410
-pps: 50pps # 100pps capped at 50pps to avoid python timeout on influx read before sampling
+pps: 100pps
 trex_duration: 14400 # 4h
 payload_size: 16
 sample_prob: 1.0

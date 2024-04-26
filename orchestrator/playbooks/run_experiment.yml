@@ -33,7 +33,7 @@
       become: yes
       args:
         chdir: /home/shared/benchmarking_tool/liveUpdates/
-      shell: "tshark -i {{ interface1 }} -f 'host 192.168.2.111 or host 192.168.2.100' -i {{ interface2 }} -f 'ether[78:2] = 0x1f40 and ether[80:2] = 0x2328' -a duration:{{ tshark_duration }} -w /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -P | go run /home/shared/benchmarking_tool/liveUpdates/liveupdate.go"
+      shell: "tshark -i {{ interface1 }} --time-stamp-type host -f 'host 192.168.2.111 or host 192.168.2.100' -i {{ interface2 }} --time-stamp-type host -f 'ether[78:2] = 0x1f40 and ether[80:2] = 0x2328' -a duration:{{ tshark_duration }} -w /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -P | go run /home/shared/benchmarking_tool/liveUpdates/liveupdate.go"
       async: "{{ (tshark_duration+30)|int|abs }}"
       poll: 0
       register: tshark
