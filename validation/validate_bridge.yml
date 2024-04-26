@@ -48,11 +48,13 @@
       become: yes
       shell: tshark -r /opt/hallo/output_files/pcaps/validate_bridge_ingres.pcapng | wc -l
       register: number_of_packets_ingres
+      when: tshark_ingres_result.finished
 
     - name: Count packets egres
       become: yes
       shell: tshark -r /opt/hallo/output_files/pcaps/validate_bridge_egres.pcapng | wc -l
       register: number_of_packets_egres
+      when: tshark_egres_result.finished
 
     - name: Append packet count to CSV file
       lineinfile:
