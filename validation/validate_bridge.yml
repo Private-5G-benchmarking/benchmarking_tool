@@ -7,14 +7,14 @@
   tasks:
     - name: Start tshark ingres
       become: yes
-      shell: "tshark -i enp5s0 -f 'udp port 8000' -a duration:60 -w /opt/hallo/output_files/pcaps/validate_bridge_ingres.pcapng"
+      shell: "tshark -i enp5s0 -f '(udp src port 8000) and (ip src 192.168.2.111)' -a duration:70 -w /opt/hallo/output_files/pcaps/validate_bridge_ingres.pcapng"
       async: "{{ (60+10)|int|abs }}"
       poll: 0
       register: tshark_ingres
 
     - name: Start tshark egres
       become: yes
-      shell: "tshark -i enp3s0 -f 'udp port 8000' -a duration:60 -w /opt/hallo/output_files/pcaps/validate_bridge_egres.pcapng"
+      shell: "tshark -i enp3s0 -f '(udp src port 8000) and (ip src 192.168.2.111)' -a duration:70 -w /opt/hallo/output_files/pcaps/validate_bridge_egres.pcapng"
       async: "{{ (60+10)|int|abs }}"
       poll: 0
       register: tshark_egres

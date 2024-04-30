@@ -22,9 +22,7 @@ def read_csv(filename):
 
 def plot_histogram(data):
     keys = list(data.keys())
-    print(keys)
     lost_packets = [entry["avg"] for entry in data.values()]
-    print(lost_packets)
 
     fig = go.Figure()
     fig.add_trace(go.Bar(y=lost_packets, x=keys, orientation='v'))
@@ -39,6 +37,6 @@ def plot_histogram(data):
     fig.show()
 
 if __name__ == "__main__":
-    filename = "/home/shared/validation_backups/sensitivity_analysis_bridge/results_16.csv"  # Change this to your CSV file's name
+    filename = "/home/shared/validation_backups/sensitivity_analysis_bridge/results_16.csv" 
     data = read_csv(filename)
     plot_histogram(data)
