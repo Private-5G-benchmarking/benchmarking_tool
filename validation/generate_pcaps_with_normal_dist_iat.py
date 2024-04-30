@@ -34,9 +34,9 @@ def write_to_pcap(packet_stream, output_file):
 def main():
     packet_count = 10000  # Number of packets to generate
     payload_size = 16   # Payload size of each packet
-    mu = 0.01         # Mean of inter-arrival time in seconds
-    sigma = 0.0015     # Standard deviation of inter-arrival time in seconds
-    output_file = "/home/shared/validation_files/effect_tcpreplay/replay_1.pcapng"
+    mu = 0.0001         # Mean of inter-arrival time in seconds
+    sigma = 0.00001     # Standard deviation of inter-arrival time in seconds
+    output_file = "/home/shared/validation_files/effect_tcpreplay/replay_3.pcapng"
     dstIP = "172.30.0.47"
     dstPort = 9999
 
