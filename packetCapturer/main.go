@@ -37,8 +37,10 @@ func checkIfRelevantPacket(packet gopacket.Packet) bool {
 			return false
 		}
 
-		ipSrc := ipPacket.SrcIP.String()
-		if ipSrc == "172.30.0.16" || ipSrc == "10.45.0.42" {
+
+//		if ipPacket.SrcIP.String() != "172.30.0.16" && ipPacket.SrcIP.String() != "10.45.0.16" && ipPacket.SrcIP.String() != "10.45.0.17" {
+		ipSrc :=ipPacket.SrcIP.String()
+		if ipSrc == "10.45.0.42" || ipSrc == "10.45.0.43" || ipSrc == "10.45.0.46" || ipSrc =="10.45.0.37" || ipSrc == "10.45.0.51" || ipSrc=="10.45.0.52" {
 			return true
 		}
 		return false
