@@ -1,0 +1,41 @@
+---
+# Run with ansible-playbook playbook_name.yml --extra-vars "@file_path_to_vars_file"
+- name: Convert for case study
+  become: true
+  hosts: localhost
+
+  tasks:
+
+    - name: Purge Influx measurements with same trial name and the live counter
+      become: yes
+      shell: "{{ item }}"
+      with_items:
+        - "sudo influx delete --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking --bucket 5gbenchmarking --start '1970-01-01T00:00:00Z' --stop '2100-01-01T00:00:00Z' --predicate '_measurement={{ trial_name }}_analysis'"
+        - "sudo influx delete --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking --bucket 5gbenchmarking --start '1970-01-01T00:00:00Z' --stop '2100-01-01T00:00:00Z' --predicate '_measurement={{ trial_name }}_analysis_aggregate'"
+        - "sudo influx delete --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking --bucket 5gbenchmarking --start '1970-01-01T00:00:00Z' --stop '2100-01-01T00:00:00Z' --predicate '_measurement=live_counter'"
+
+    - name: Run Go script
+      args:
+        chdir: /home/shared/benchmarking_tool/packetCapturer
+      shell: "sudo go run /home/shared/benchmarking_tool/packetCapturer/main.go -s /home/shared/case_study_files/open_source_network/run_{{ run }}/pcaps/{{ trial_name }}.pcapng -c /home/shared/case_study_files/open_source_network/run_{{ run }}/csvs/packetMatcher/{{ trial_name }}.csv -p 1.0 -l4 udp"
+      register: go_script_output
+
+    
+    - name: Copy cpu.pprof for the experiment
+      shell: " {{ item }}"
+      with_items: 
+        - "sudo cp -f /home/shared/benchmarking_tool/packetCapturer/cpu.pprof /home/shared/case_study_files/open_source_network/run_{{ run }}/pprofs/{{ trial_name }}_cpu.pprof"
+        - "sudo cp -f /home/shared/benchmarking_tool/packetCapturer/memory.pprof /home/shared/case_study_files/open_source_network/run_{{ run }}/pprofs/{{ trial_name }}_memory.pprof"
+
+    - name: Run analytics
+      args:
+        chdir: /home/shared/benchmarking_tool/packetAnalyser/src2
+      shell: "sudo go run /home/shared/benchmarking_tool/packetAnalyser/src2/main.go -c /home/shared/case_study_files/open_source_network/run_{{ run }}/csvs/packetMatcher/{{ trial_name }}.csv -m {{ trial_name }}_analysis"
+      register: analytics_output
+
+    - name: Dump influx for validation
+      become: yes
+      shell: "{{ item }}"
+      with_items:
+        - "influx query --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking 'from(bucket: \"5gbenchmarking\") |> range(start: 0) |> filter(fn: (r) => r._measurement == \"{{ trial_name }}_analysis\") |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")' --raw > /home/shared/case_study_files/open_source_network/run_{{ run }}/csvs/packetAnalyzer/{{ trial_name }}.csv"
+        - "influx query --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking 'from(bucket: \"5gbenchmarking\") |> range(start: 0) |> filter(fn: (r) => r._measurement == \"{{ trial_name }}_analysis_aggregate\") |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")' --raw > /home/shared/case_study_files/open_source_network/run_{{ run }}/csvs/packetAnalyzer{{ trial_name }}_aggregate.csv"
