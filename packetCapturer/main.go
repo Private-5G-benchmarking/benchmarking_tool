@@ -125,15 +125,16 @@ func main() {
 		//Convert the new packet to an instance of the parsedPacket struct
 		parsedPacket := packetlib.NewParsedPacket(packet, l4_protocol)
 		//Search through the sliding window and handle any potential matches or overflowing window
+
 		if parsedPacket.Psize == 58 {
 			foundMatch := slidingWindowRx.SearchSlidingWindow(parsedPacket, cdf, writer)
 			if !foundMatch {
-				slidingWindowTx.HanldeUnmatchedPacket(parsedPacket, cdf, writer)
+				slidingWindowTx.HandleUnmatchedPacket(parsedPacket, cdf, writer)
 			}
 			} else {
 			foundMatch := slidingWindowTx.SearchSlidingWindow(parsedPacket, cdf, writer)
 			if !foundMatch {
-				slidingWindowRx.HanldeUnmatchedPacket(parsedPacket, cdf, writer)
+				slidingWindowRx.HandleUnmatchedPacket(parsedPacket, cdf, writer)
 			}
 		}
 

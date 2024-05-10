@@ -30,7 +30,7 @@ func (slidingWindow *SlidingWindow) SearchSlidingWindow(newPacket *packetlib.Par
 	return matchFound
 }
 
-func (slidingWindow *SlidingWindow) HanldeUnmatchedPacket(newPacket *packetlib.ParsedPacket, cdf []float32, writer *csv.Writer) {
+func (slidingWindow *SlidingWindow) HandleUnmatchedPacket(newPacket *packetlib.ParsedPacket, cdf []float32, writer *csv.Writer) {
 	slidingWindow.AddToWindow(newPacket)
 	if slidingWindow.IsWindowFull() {
 		exitingElement := slidingWindow.Window[0]
