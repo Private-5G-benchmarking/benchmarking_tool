@@ -22,7 +22,7 @@
       async: "{{ (trex_duration*2)|int|abs }}" 
       poll: 0
       register: trex_server
-      delegate_to: 129.241.200.231
+      delegate_to: 10.100.52.238
     
     - name: Pause to wait for TRex server
       ansible.builtin.pause:
@@ -44,7 +44,7 @@
       poll: 0 # start the task in the background and move on to the next task without waiting for completion
       shell: python3 /opt/trex/v3.04/automation/trex_control_plane/interactive/trex/examples/stl/my-automation-test.py -m {{ pps }} -d {{ trex_duration }} --payload_size {{ payload_size }}
       register: traffgen_output
-      delegate_to: 129.241.200.231
+      delegate_to: 10.100.52.238
 
     - name: Wait for tshark to complete
       async_status:
@@ -91,21 +91,21 @@
       shell: "sudo go run /home/shared/benchmarking_tool/packetAnalyser/src2/main.go -c /home/shared/output_files/csvs/{{ trial_name }}.csv -m {{ trial_name }}_analysis"
       register: analytics_output
 
-    - name: Dump influx for validation
-      become: yes
-      shell: "{{ item }}"
-      with_items:
-        - "influx query --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking 'from(bucket: \"5gbenchmarking\") |> range(start: 0) |> filter(fn: (r) => r._measurement == \"{{ trial_name }}_analysis\") |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")' --raw > /home/shared/validation_backups/influx/base_case/{{ trial_name }}.csv"
-        - "influx query --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking 'from(bucket: \"5gbenchmarking\") |> range(start: 0) |> filter(fn: (r) => r._measurement == \"{{ trial_name }}_analysis_aggregate\") |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")' --raw > /home/shared/validation_backups/influx/base_case/{{ trial_name }}_aggregate.csv"
-
-    - name: Copy pcap for validation
-      become: yes
-      shell: "cp /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng /home/shared/validation_backups/pcaps/base_case/{{ trial_name }}.pcapng"
-
-    - name: Copy matched csv for validation
-      become: yes
-      shell: "cp /home/shared/output_files/csvs/{{ trial_name }}.csv /home/shared/validation_backups/csv/base_case/{{ trial_name }}.csv"
+        #    - name: Dump influx for validation
+        #      become: yes
+        #      shell: "{{ item }}"
+        #      with_items:
+        #        - "influx query --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking 'from(bucket: \"5gbenchmarking\") |> range(start: 0) |> filter(fn: (r) => r._measurement == \"{{ trial_name }}_analysis\") |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")' --raw > /home/shared/validation_backups/influx/1432_byte_payload/{{ trial_name }}.csv"
+        #        - "influx query --token OnjSj1CE5Feqwdb1c7w1SPj2EJVV6yWpHHUe93HkfKyVeBo4TN5BrcfVezKJ6sUk50XPVyvPVH1ljSv4JaypzQ== --org 5gbenchmarking 'from(bucket: \"5gbenchmarking\") |> range(start: 0) |> filter(fn: (r) => r._measurement == \"{{ trial_name }}_analysis_aggregate\") |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")' --raw > /home/shared/validation_backups/influx/1432_byte_payload/{{ trial_name }}_aggregate.csv"
+        #
+        #    - name: Copy pcap for validation
+        #      become: yes
+        #      shell: "cp /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng /home/shared/validation_backups/pcaps/1432_byte_payload/{{ trial_name }}.pcapng"
+        #
+        #    - name: Copy matched csv for validation
+        #      become: yes
+        #      shell: "cp /home/shared/output_files/csvs/{{ trial_name }}.csv /home/shared/validation_backups/csv/1432_byte_payload/{{ trial_name }}.csv"
 
     - name: Kill t-rex process
       command: "pkill t-rex-64"
-      delegate_to: 129.241.200.231
+      delegate_to: 10.100.52.238

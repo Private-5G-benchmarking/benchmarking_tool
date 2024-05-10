@@ -28,7 +28,7 @@ func calculateOneWayDelay(packets []*parselib.PacketInfo) (map[float64]float64, 
 	for _, packet := range packets {
 		one_way_delay, err := packet.OneWayDelay()
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 			continue
 		}
 		if one_way_delay < 0 {

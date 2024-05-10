@@ -32,10 +32,16 @@ func checkIfRelevantPacket(packet gopacket.Packet) bool {
 		ipLayer := payload.Layer(layers.LayerTypeIPv4)
 		ipPacket, _ := ipLayer.(*layers.IPv4)
 
-		if ipPacket.SrcIP.String() != "172.30.0.16" {
+		if ipPacket.Protocol == 1 {
 			return false
 		}
-		return true
+
+//		if ipPacket.SrcIP.String() != "172.30.0.16" && ipPacket.SrcIP.String() != "10.45.0.16" && ipPacket.SrcIP.String() != "10.45.0.17" {
+		ipSrc :=ipPacket.SrcIP.String()
+		if ipSrc == "10.45.0.42" || ipSrc == "10.45.0.43" || ipSrc == "10.45.0.46" || ipSrc =="10.45.0.37" || ipSrc == "10.45.0.51" || ipSrc=="10.45.0.52" {
+			return true
+		}
+		return false
 
 	} else {
 		ipLayer := packet.Layer(layers.LayerTypeIPv4)
