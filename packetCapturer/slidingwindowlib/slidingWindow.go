@@ -13,7 +13,7 @@ type SlidingWindow struct {
 	WindowSize	int
 }
 
-func (slidingWindow *SlidingWindow) HandleNewPacket(newPacket *packetlib.ParsedPacket, cdf []float32, writer *csv.Writer) {
+func (slidingWindow *SlidingWindow) SearchSlidingWindow(newPacket *packetlib.ParsedPacket, cdf []float32, writer *csv.Writer) bool {
 	matchFound := false
 	for index, p := range slidingWindow.Window {
 		if matchlib.IsPacketMatchSequenceNr(newPacket, p) {
@@ -27,11 +27,11 @@ func (slidingWindow *SlidingWindow) HandleNewPacket(newPacket *packetlib.ParsedP
 			break
 		}
 	}
-	if !matchFound {
-		// fmt.Println("added to window")
-		slidingWindow.AddToWindow(newPacket)
-	}
+	return matchFound
+}
 
+func (slidingWindow *SlidingWindow) HandleUnmatchedPacket(newPacket *packetlib.ParsedPacket, cdf []float32, writer *csv.Writer) {
+	slidingWindow.AddToWindow(newPacket)
 	if slidingWindow.IsWindowFull() {
 		exitingElement := slidingWindow.Window[0]
 		exitingPacket := csvlib.NewPacketInfo(exitingElement.SrcIp, exitingElement.DstIp, exitingElement.Psize,exitingElement.Psize,exitingElement.Ts,exitingElement.Ts, false)
@@ -39,10 +39,8 @@ func (slidingWindow *SlidingWindow) HandleNewPacket(newPacket *packetlib.ParsedP
 		if samplelib.Sample(cdf) == 1 {
 			exitingPacket.WriteToCsv(writer)
 		}
-		// slidingWindow.Window = slidingWindow.Window[:1]
 		slidingWindow.RemoveFromWindow(0)
 	}
-
 }
 
 func (slidingWindow SlidingWindow) IsWindowFull() bool {

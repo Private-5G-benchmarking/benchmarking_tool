@@ -4,10 +4,10 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
-	"strconv"
 	"log"
 	"os"
 	"runtime/pprof"
+	"strconv"
 	"time"
 
 	"packetCapturer/packetlib"
@@ -32,9 +32,11 @@ func checkIfRelevantPacket(packet gopacket.Packet) bool {
 		ipLayer := payload.Layer(layers.LayerTypeIPv4)
 		ipPacket, _ := ipLayer.(*layers.IPv4)
 
+		//Done to skip gtp encapsulated icmp messages
 		if ipPacket.Protocol == 1 {
 			return false
 		}
+
 
 //		if ipPacket.SrcIP.String() != "172.30.0.16" && ipPacket.SrcIP.String() != "10.45.0.16" && ipPacket.SrcIP.String() != "10.45.0.17" {
 		ipSrc :=ipPacket.SrcIP.String()
@@ -109,7 +111,8 @@ func main() {
 	// Create a packet source to read packets from the file
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
-	slidingWindow := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:20000}
+	slidingWindowTx := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:20000}
+	slidingWindowRx := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:20000}
 	
 	// Iterate through each packet in the pcap file
 	for packet := range packetSource.Packets() {
@@ -124,10 +127,23 @@ func main() {
 		//Convert the new packet to an instance of the parsedPacket struct
 		parsedPacket := packetlib.NewParsedPacket(packet, l4_protocol)
 		//Search through the sliding window and handle any potential matches or overflowing window
-		slidingWindow.HandleNewPacket(parsedPacket, cdf, writer)
+
+		if parsedPacket.Psize == 58 {
+			foundMatch := slidingWindowRx.SearchSlidingWindow(parsedPacket, cdf, writer)
+			if !foundMatch {
+				slidingWindowTx.HandleUnmatchedPacket(parsedPacket, cdf, writer)
+			}
+			} else {
+			foundMatch := slidingWindowTx.SearchSlidingWindow(parsedPacket, cdf, writer)
+			if !foundMatch {
+				slidingWindowRx.HandleUnmatchedPacket(parsedPacket, cdf, writer)
+			}
+		}
+
 	}
 
-	slidingWindow.EmptySlidingWindow(writer, cdf)
+	slidingWindowTx.EmptySlidingWindow(writer, cdf)
+	// slidingWindowRx.EmptySlidingWindow(writer, cdf)
 
 	// Record the end time
 	endTime := time.Now()
@@ -147,7 +163,7 @@ func main() {
 
 	profile_writer := csv.NewWriter(profile_csv)
 	defer profile_writer.Flush()
-	data := []string{strconv.Itoa(totalNrPackets), strconv.FormatInt(durationMilli, 10), strconv.Itoa(slidingWindow.WindowSize)}
+	data := []string{strconv.Itoa(totalNrPackets), strconv.FormatInt(durationMilli, 10), strconv.Itoa(slidingWindowTx.WindowSize)}
 
 	write_err := profile_writer.Write(data)
 	if write_err != nil {
