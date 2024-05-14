@@ -130,7 +130,7 @@ func main() {
 	for !source1Exhausted || !source2Exhausted {
 		select {
 		case packet, ok := <-packetSource1.Packets():
-			fmt.Println("case 1")
+
 			if !ok {
 				// Packet source 1 is exhausted
 				source1Exhausted = true
@@ -146,8 +146,6 @@ func main() {
 			if !checkIfRelevantPacket(packet) || ipLayer == nil {
 				continue
 			}
-			fmt.Println("relevant 1")
-			fmt.Println(packet.String())
 	
 			// Convert the new packet to an instance of the parsedPacket struct
 			parsedPacket := packetlib.NewParsedPacket(packet, l4_protocol)
@@ -159,13 +157,11 @@ func main() {
 				}
 		
 		case packet, ok := <-packetSource2.Packets():
-		fmt.Println("case 2")
 		if !ok {
 			// Packet source 2 is exhausted
 			source2Exhausted = true
 			continue
 		}
-		fmt.Println(packet.String())
 		if packet.ErrorLayer() != nil {
 			fmt.Println(packet.ErrorLayer().Error())
 			continue
