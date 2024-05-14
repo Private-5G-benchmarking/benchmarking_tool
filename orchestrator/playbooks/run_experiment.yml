@@ -22,7 +22,7 @@
       async: "{{ (trex_duration*2)|int|abs }}" 
       poll: 0
       register: trex_server
-      delegate_to: 10.100.52.238
+      delegate_to: 129.241.200.231
     
     - name: Pause to wait for TRex server
       ansible.builtin.pause:
@@ -44,7 +44,7 @@
       poll: 0 # start the task in the background and move on to the next task without waiting for completion
       shell: python3 /opt/trex/v3.04/automation/trex_control_plane/interactive/trex/examples/stl/my-automation-test.py -m {{ pps }} -d {{ trex_duration }} --payload_size {{ payload_size }}
       register: traffgen_output
-      delegate_to: 10.100.52.238
+      delegate_to: 129.241.200.231
 
     - name: Wait for tshark to complete
       async_status:
@@ -108,4 +108,4 @@
 
     - name: Kill t-rex process
       command: "pkill t-rex-64"
-      delegate_to: 10.100.52.238
+      delegate_to: 129.241.200.231

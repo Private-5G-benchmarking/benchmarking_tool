@@ -1,6 +1,6 @@
 # vars.yml
-interface1: enp5s0 #enp3s0
-interface2: enp3s0 #enp1s0f1
+interface1: enp3s0
+interface2: enp1s0f1
 trial_name: sensor_continuous_low_bw_long_dur_low_pl
 # packet_amount: 10000000 #TODO
 tshark_duration: 7210
