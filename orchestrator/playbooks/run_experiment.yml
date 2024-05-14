@@ -29,14 +29,23 @@
         prompt: "Pausing..."
         seconds: "30" # add this to wait for the trex server to start before generating traffic 
 
-    - name: Start tshark
+       - name: Start tshark interface {{ interface1 }}
       become: yes
       args:
         chdir: /home/shared/benchmarking_tool/liveUpdates/
-      shell: "tshark -i {{ interface1 }} --time-stamp-type host -f 'host 192.168.2.111 or host 192.168.2.100' -i {{ interface2 }} --time-stamp-type host -a duration:{{ tshark_duration }} -w /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -P | go run /home/shared/benchmarking_tool/liveUpdates/liveupdate.go"
+      shell: "tshark -i {{ interface1 }} --time-stamp-type host -f 'host 192.168.2.111 or host 192.168.2.100' -a duration:{{ tshark_duration }} -w /opt/hallo/output_files/pcaps/{{ trial_name }}_1.pcapng -P | go run /home/shared/benchmarking_tool/liveUpdates/liveupdate.go"
       async: "{{ (tshark_duration+30)|int|abs }}"
       poll: 0
-      register: tshark
+      register: tshark_1
+
+    - name: Start tshark interface {{ interface2 }}
+      become: yes
+      args:
+        chdir: /home/shared/benchmarking_tool/liveUpdates/
+      shell: "tshark -i {{ interface2 }} --time-stamp-type host -a duration:{{ tshark_duration }} -w /opt/hallo/output_files/pcaps/{{ trial_name }}_2.pcapng"
+      async: "{{ (tshark_duration+30)|int|abs }}"
+      poll: 0
+      register: tshark_2
 
     - name: Generate traffic
       become: yes
@@ -44,16 +53,23 @@
       poll: 0 # start the task in the background and move on to the next task without waiting for completion
       shell: python3 /opt/trex/v3.04/automation/trex_control_plane/interactive/trex/examples/stl/my-automation-test.py -m {{ pps }} -d {{ trex_duration }} --payload_size {{ payload_size }}
       register: traffgen_output
-      delegate_to: 10.100.52.238
+      delegate_to: 129.241.200.231
 
-    - name: Wait for tshark to complete
+    - name: Wait for tshark 1 to complete
       async_status:
-        jid: "{{ tshark.ansible_job_id }}"
-      register: tshark_result
-      until: tshark_result.finished
+        jid: "{{ tshark_1.ansible_job_id }}"
+      register: tshark_result_1
+      until: tshark_result_1.finished
       retries: 1000
       delay: 30
 
+    - name: Wait for tshark 2 to complete
+      async_status:
+        jid: "{{ tshark_2.ansible_job_id }}"
+      register: tshark_result_2
+      until: tshark_result_2.finished
+      retries: 1000
+      delay: 30
     - name: Check for corrupt packets
       shell: pcapfix -n -o /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng
 

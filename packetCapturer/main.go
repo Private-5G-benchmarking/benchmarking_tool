@@ -60,12 +60,14 @@ func checkIfRelevantPacket(packet gopacket.Packet) bool {
 
 func main() {
 	// Setup flag
-	var pcap_loc string
+	var pcap_loc1 string
+	var pcap_loc2 string
 	var output_csv string
 	var sample_prob float64
 	var l4_protocol string
 
-	flag.StringVar(&pcap_loc, "s", "", "Provide a file path for the capture file (.pcap(ng))")
+	flag.StringVar(&pcap_loc1, "s1", "", "Provide a file path for the capture file (.pcap(ng))")
+	flag.StringVar(&pcap_loc2, "s2", "", "Provide a file path for the capture file (.pcap(ng))")
 	flag.StringVar(&output_csv, "c", "", "Provide a name for the output csv file")
 	flag.Float64Var(&sample_prob, "p", 1.0, "Provide a sample probability for writing a packet to Influx")
 	flag.StringVar(&l4_protocol, "l4", "udp", "Provide a transport layer protocol to get sequence number for matching")
@@ -91,11 +93,18 @@ func main() {
 	defer memoryProfile.Close()
 
 	// Open the pcap file
-	handle, err := pcap.OpenOffline(pcap_loc)
+	handle1, err := pcap.OpenOffline(pcap_loc1)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer handle.Close()
+	defer handle1.Close()
+
+	// Open the pcap file
+	handle2, err := pcap.OpenOffline(pcap_loc2)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer handle2.Close()
 
 	//Setup for csv writes
 	file, err := os.Create(output_csv)
@@ -109,14 +118,45 @@ func main() {
 	defer writer.Flush()
 
 	// Create a packet source to read packets from the file
-	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+	packetSource1 := gopacket.NewPacketSource(handle1, handle1.LinkType())
+	packetSource2 := gopacket.NewPacketSource(handle2, handle2.LinkType())
 
 	slidingWindowTx := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:20000}
 	slidingWindowRx := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:20000}
-	
-	// Iterate through each packet in the pcap file
-	for packet := range packetSource.Packets() {
 
+	// Keep track of whether each packet source has been exhausted
+	var source1Exhausted, source2Exhausted bool
+	
+	for !source1Exhausted || !source2Exhausted {
+		select {
+			case packet, ok := <-packetSource1.Packets():
+			if !ok {
+				// Packet source 1 is exhausted
+				source1Exhausted = true
+				continue
+			}
+			totalNrPackets++
+	
+			ipLayer := packet.Layer(layers.LayerTypeIPv4)
+			if !checkIfRelevantPacket(packet) || ipLayer == nil {
+				continue
+			}
+	
+			// Convert the new packet to an instance of the parsedPacket struct
+			parsedPacket := packetlib.NewParsedPacket(packet, l4_protocol)
+	
+			// Search through the sliding window based on packet size
+				foundMatch := slidingWindowRx.SearchSlidingWindow(parsedPacket, cdf, writer)
+				if !foundMatch {
+					slidingWindowTx.HandleUnmatchedPacket(parsedPacket, cdf, writer)
+				}
+		
+		case packet, ok := <-packetSource2.Packets():
+		if !ok {
+			// Packet source 2 is exhausted
+			source2Exhausted = true
+			continue
+		}
 		totalNrPackets++
 
 		ipLayer := packet.Layer(layers.LayerTypeIPv4)
@@ -124,28 +164,20 @@ func main() {
 			continue
 		}
 
-		//Convert the new packet to an instance of the parsedPacket struct
+		// Convert the new packet to an instance of the parsedPacket struct
 		parsedPacket := packetlib.NewParsedPacket(packet, l4_protocol)
-		//Search through the sliding window and handle any potential matches or overflowing window
 
-		if parsedPacket.Psize == 58 {
-			foundMatch := slidingWindowRx.SearchSlidingWindow(parsedPacket, cdf, writer)
-			if !foundMatch {
-				slidingWindowTx.HandleUnmatchedPacket(parsedPacket, cdf, writer)
-			}
-			} else {
-			foundMatch := slidingWindowTx.SearchSlidingWindow(parsedPacket, cdf, writer)
-			if !foundMatch {
-				slidingWindowRx.HandleUnmatchedPacket(parsedPacket, cdf, writer)
+		foundMatch := slidingWindowTx.SearchSlidingWindow(parsedPacket, cdf, writer)
+		if !foundMatch {
+			slidingWindowRx.HandleUnmatchedPacket(parsedPacket, cdf, writer)
 			}
 		}
-
 	}
-
 	slidingWindowTx.EmptySlidingWindow(writer, cdf)
+	
 	// slidingWindowRx.EmptySlidingWindow(writer, cdf)
-
-	// Record the end time
+		
+		// Record the end time
 	endTime := time.Now()
 
 	// Calculate the duration
@@ -160,7 +192,7 @@ func main() {
 		log.Fatal("Could not open CSV file: ", profile_err)
 	}
 	defer profile_csv.Close()
-
+	
 	profile_writer := csv.NewWriter(profile_csv)
 	defer profile_writer.Flush()
 	data := []string{strconv.Itoa(totalNrPackets), strconv.FormatInt(durationMilli, 10), strconv.Itoa(slidingWindowTx.WindowSize)}
