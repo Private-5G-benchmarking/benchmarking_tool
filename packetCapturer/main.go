@@ -37,10 +37,9 @@ func checkIfRelevantPacket(packet gopacket.Packet) bool {
 			return false
 		}
 
-
-//		if ipPacket.SrcIP.String() != "172.30.0.16" && ipPacket.SrcIP.String() != "10.45.0.16" && ipPacket.SrcIP.String() != "10.45.0.17" {
 		ipSrc :=ipPacket.SrcIP.String()
-		if ipSrc == "10.45.0.42" || ipSrc == "10.45.0.43" || ipSrc == "10.45.0.46" || ipSrc =="10.45.0.37" || ipSrc == "10.45.0.51" || ipSrc=="10.45.0.52" {
+		if ipSrc != "172.30.0.16" && ipSrc != "10.45.0.16" && ipSrc != "10.45.0.17" {
+		// if ipSrc == "10.45.0.42" || ipSrc == "10.45.0.43" || ipSrc == "10.45.0.46" || ipSrc =="10.45.0.37" || ipSrc == "10.45.0.51" || ipSrc=="10.45.0.52" {
 			return true
 		}
 		return false
@@ -125,14 +124,20 @@ func main() {
 	slidingWindowRx := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:20000}
 
 	// Keep track of whether each packet source has been exhausted
-	var source1Exhausted, source2Exhausted bool
+	source1Exhausted := false
+	source2Exhausted :=false
 	
 	for !source1Exhausted || !source2Exhausted {
 		select {
-			case packet, ok := <-packetSource1.Packets():
+		case packet, ok := <-packetSource1.Packets():
+			fmt.Println("case 1")
 			if !ok {
 				// Packet source 1 is exhausted
 				source1Exhausted = true
+				continue
+			}
+			if packet.ErrorLayer() != nil {
+				fmt.Println(packet.ErrorLayer().Error())
 				continue
 			}
 			totalNrPackets++
@@ -141,6 +146,8 @@ func main() {
 			if !checkIfRelevantPacket(packet) || ipLayer == nil {
 				continue
 			}
+			fmt.Println("relevant 1")
+			fmt.Println(packet.String())
 	
 			// Convert the new packet to an instance of the parsedPacket struct
 			parsedPacket := packetlib.NewParsedPacket(packet, l4_protocol)
@@ -152,11 +159,18 @@ func main() {
 				}
 		
 		case packet, ok := <-packetSource2.Packets():
+		fmt.Println("case 2")
 		if !ok {
 			// Packet source 2 is exhausted
 			source2Exhausted = true
 			continue
 		}
+		fmt.Println(packet.String())
+		if packet.ErrorLayer() != nil {
+			fmt.Println(packet.ErrorLayer().Error())
+			continue
+		}
+
 		totalNrPackets++
 
 		ipLayer := packet.Layer(layers.LayerTypeIPv4)
@@ -174,10 +188,9 @@ func main() {
 		}
 	}
 	slidingWindowTx.EmptySlidingWindow(writer, cdf)
-	
 	// slidingWindowRx.EmptySlidingWindow(writer, cdf)
 		
-		// Record the end time
+	// Record the end time
 	endTime := time.Now()
 
 	// Calculate the duration

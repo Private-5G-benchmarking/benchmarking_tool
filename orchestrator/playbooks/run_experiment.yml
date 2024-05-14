@@ -22,14 +22,14 @@
       async: "{{ (trex_duration*2)|int|abs }}" 
       poll: 0
       register: trex_server
-      delegate_to: 10.100.52.238
+      delegate_to: 129.241.200.231 #10.100.52.238
     
     - name: Pause to wait for TRex server
       ansible.builtin.pause:
         prompt: "Pausing..."
         seconds: "30" # add this to wait for the trex server to start before generating traffic 
 
-       - name: Start tshark interface {{ interface1 }}
+    - name: Start tshark interface {{ interface1 }}
       become: yes
       args:
         chdir: /home/shared/benchmarking_tool/liveUpdates/
@@ -70,25 +70,26 @@
       until: tshark_result_2.finished
       retries: 1000
       delay: 30
-    - name: Check for corrupt packets
-      shell: pcapfix -n -o /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng
 
-    - name: Check if fixed pcap exists
-      stat:
-        path: /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng
-      register: stat_result
+    # - name: Check for corrupt packets
+    #   shell: pcapfix -n -o /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng
 
-    - name: Rename corrupt and fixed pcap-files 
-      shell: "{{ item }}"
-      with_items:
-        - "mv /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng /opt/hallo/output_files/pcaps/CORRUPT_{{ trial_name }}.pcapng"
-        - "mv /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng"
-      when: stat_result.stat.exists
+    # - name: Check if fixed pcap exists
+    #   stat:
+    #     path: /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng
+    #   register: stat_result
+
+    # - name: Rename corrupt and fixed pcap-files 
+    #   shell: "{{ item }}"
+    #   with_items:
+    #     - "mv /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng /opt/hallo/output_files/pcaps/CORRUPT_{{ trial_name }}.pcapng"
+    #     - "mv /opt/hallo/output_files/pcaps/fixed_{{ trial_name }}.pcapng /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng"
+    #   when: stat_result.stat.exists
 
     - name: Run Go script
       args:
-        chdir: /home/shared/benchmarking_tool/packetCapturer
-      shell: "sudo go run /home/shared/benchmarking_tool/packetCapturer/main.go -s /opt/hallo/output_files/pcaps/{{ trial_name }}.pcapng -c /home/shared/output_files/csvs/{{ trial_name }}.csv -p {{ sample_prob }} -l4 {{ l4 }}"
+        chdir: /home/sebastfu/benchmarking_tool/packetCapturer
+      shell: "sudo go run /home/sebastfu/benchmarking_tool/packetCapturer/main.go -s1 /opt/hallo/output_files/pcaps/{{ trial_name }}_1.pcapng -s2 /opt/hallo/output_files/pcaps/{{ trial_name }}_2.pcapng -c /home/shared/output_files/csvs/{{ trial_name }}.csv -p {{ sample_prob }} -l4 {{ l4 }}"
       register: go_script_output
 
     - name: Print Go script output
@@ -124,4 +125,4 @@
 
     - name: Kill t-rex process
       command: "pkill t-rex-64"
-      delegate_to: 10.100.52.238
+      delegate_to: 129.241.200.231 #10.100.52.238
