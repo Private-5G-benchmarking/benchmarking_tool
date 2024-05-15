@@ -37,10 +37,8 @@ func checkIfRelevantPacket(packet gopacket.Packet) bool {
 			return false
 		}
 
-
-//		if ipPacket.SrcIP.String() != "172.30.0.16" && ipPacket.SrcIP.String() != "10.45.0.16" && ipPacket.SrcIP.String() != "10.45.0.17" {
-		ipSrc :=ipPacket.SrcIP.String()
-		if ipSrc == "10.45.0.42" || ipSrc == "10.45.0.43" || ipSrc == "10.45.0.46" || ipSrc =="10.45.0.37" || ipSrc == "10.45.0.51" || ipSrc=="10.45.0.52" {
+		ipSrc := ipPacket.SrcIP.String()
+		if ipSrc == "172.30.0.16" {
 			return true
 		}
 		return false
@@ -111,8 +109,8 @@ func main() {
 	// Create a packet source to read packets from the file
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
-	slidingWindowTx := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:20000}
-	slidingWindowRx := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:20000}
+	slidingWindowTx := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:100000}
+	slidingWindowRx := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:100000}
 	
 	// Iterate through each packet in the pcap file
 	for packet := range packetSource.Packets() {
@@ -123,12 +121,15 @@ func main() {
 		if !checkIfRelevantPacket(packet) || ipLayer == nil {
 			continue
 		}
+		if packet.ErrorLayer() != nil {
+			continue
+		}
 
 		//Convert the new packet to an instance of the parsedPacket struct
 		parsedPacket := packetlib.NewParsedPacket(packet, l4_protocol)
 		//Search through the sliding window and handle any potential matches or overflowing window
 
-		if parsedPacket.Psize == 58 {
+		if parsedPacket.Psize == 58 || parsedPacket.Psize == 1242 {
 			foundMatch := slidingWindowRx.SearchSlidingWindow(parsedPacket, cdf, writer)
 			if !foundMatch {
 				slidingWindowTx.HandleUnmatchedPacket(parsedPacket, cdf, writer)

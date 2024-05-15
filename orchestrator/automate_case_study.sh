@@ -13,6 +13,7 @@ for index in "${NUMBER_OF_RUNS[@]}"; do
         ansible-playbook playbooks/run_experiment.yml --extra-vars "@/home/shared/benchmarking_tool/orchestrator/trials/$file"
         
         trial_name=$(sed -n 's/^trial_name: \(.*\)/\1/p' "/home/shared/benchmarking_tool/orchestrator/trials/$file")
+	cp /opt/hallo/output_files/pcaps/$trial_name.pcapng /home/shared/case_study_files/nokia_network/run_$index/pcaps/$trial_name.pcapng
         ansible-playbook playbooks/convert_case_study.yml --extra-vars "run=$index trial_name=$trial_name"
     done
 done
