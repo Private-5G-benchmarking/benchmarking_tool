@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime/pprof"
 	"strconv"
+	"sync"
 	"time"
 
 	"packetCapturer/packetlib"
@@ -38,8 +39,8 @@ func checkIfRelevantPacket(packet gopacket.Packet) bool {
 		}
 
 		ipSrc :=ipPacket.SrcIP.String()
-		if ipSrc != "172.30.0.16" && ipSrc != "10.45.0.16" && ipSrc != "10.45.0.17" {
-		// if ipSrc == "10.45.0.42" || ipSrc == "10.45.0.43" || ipSrc == "10.45.0.46" || ipSrc =="10.45.0.37" || ipSrc == "10.45.0.51" || ipSrc=="10.45.0.52" {
+		// if ipSrc != "172.30.0.16" && ipSrc != "10.45.0.16" && ipSrc != "10.45.0.17" {
+		if ipSrc == "10.45.0.42" || ipSrc == "10.45.0.43" || ipSrc == "10.45.0.46" || ipSrc =="10.45.0.37" || ipSrc == "10.45.0.51" || ipSrc=="10.45.0.52" {
 			return true
 		}
 		return false
@@ -49,7 +50,7 @@ func checkIfRelevantPacket(packet gopacket.Packet) bool {
 		ipPacket, _ := ipLayer.(*layers.IPv4)
 		if ipLayer != nil {
 			srcIP := ipPacket.SrcIP.String()
-			if srcIP == "192.168.2.100" || srcIP == "192.168.2.111" || srcIP == "172.30.1.8" {
+			if srcIP == "192.168.2.100" || srcIP == "192.168.2.111" || srcIP == "172.30.1.8" || srcIP =="11.10.0.2" {
 				return true
 			}
 		}
@@ -116,74 +117,84 @@ func main() {
 	writer.Write([]string{"Srcip", "Dstip", "Psize", "Encapsulated_psize", "Rx_tx", "Tx_ts", "Found_match"})
 	defer writer.Flush()
 
-	// Create a packet source to read packets from the file
-	packetSource1 := gopacket.NewPacketSource(handle1, handle1.LinkType())
-	packetSource2 := gopacket.NewPacketSource(handle2, handle2.LinkType())
+// Create a packet source to read packets from the file
+packetSource1 := gopacket.NewPacketSource(handle1, handle1.LinkType())
+packetSource2 := gopacket.NewPacketSource(handle2, handle2.LinkType())
 
-	slidingWindowTx := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:20000}
-	slidingWindowRx := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:20000}
+var slidingWindowMutex sync.Mutex
 
-	// Keep track of whether each packet source has been exhausted
-	source1Exhausted := false
-	source2Exhausted :=false
-	
-	for !source1Exhausted || !source2Exhausted {
-		select {
-		case packet, ok := <-packetSource1.Packets():
+slidingWindowTx := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:100000}
+slidingWindowRx := slidingwindowlib.SlidingWindow{Window: []*packetlib.ParsedPacket{}, WindowSize:100000}
 
-			if !ok {
-				// Packet source 1 is exhausted
-				source1Exhausted = true
-				continue
-			}
-			if packet.ErrorLayer() != nil {
-				fmt.Println(packet.ErrorLayer().Error())
-				continue
-			}
-			totalNrPackets++
-	
-			ipLayer := packet.Layer(layers.LayerTypeIPv4)
-			if !checkIfRelevantPacket(packet) || ipLayer == nil {
-				continue
-			}
-	
-			// Convert the new packet to an instance of the parsedPacket struct
-			parsedPacket := packetlib.NewParsedPacket(packet, l4_protocol)
-	
-			// Search through the sliding window based on packet size
-				foundMatch := slidingWindowRx.SearchSlidingWindow(parsedPacket, cdf, writer)
-				if !foundMatch {
-					slidingWindowTx.HandleUnmatchedPacket(parsedPacket, cdf, writer)
-				}
-		
-		case packet, ok := <-packetSource2.Packets():
-		if !ok {
-			// Packet source 2 is exhausted
-			source2Exhausted = true
-			continue
-		}
-		if packet.ErrorLayer() != nil {
-			fmt.Println(packet.ErrorLayer().Error())
-			continue
-		}
+// Keep track of whether each packet source has been exhausted
+source1Exhausted := false
+source2Exhausted := false
+// Define channels to communicate the end of sources
+source1Done := make(chan struct{})
+source2Done := make(chan struct{})
 
-		totalNrPackets++
+// Process packets from source 1
+go func() {
+    for packet := range packetSource1.Packets() {
+        if packet.ErrorLayer() != nil {
+            fmt.Println(packet.ErrorLayer().Error())
+            continue
+        }
+        totalNrPackets++
 
-		ipLayer := packet.Layer(layers.LayerTypeIPv4)
-		if !checkIfRelevantPacket(packet) || ipLayer == nil {
-			continue
-		}
+        ipLayer := packet.Layer(layers.LayerTypeIPv4)
+        if !checkIfRelevantPacket(packet) || ipLayer == nil {
+            continue
+        }
+        parsedPacket := packetlib.NewParsedPacket(packet, l4_protocol)
 
-		// Convert the new packet to an instance of the parsedPacket struct
-		parsedPacket := packetlib.NewParsedPacket(packet, l4_protocol)
+        slidingWindowMutex.Lock()
+        foundMatch := slidingWindowRx.SearchSlidingWindow(parsedPacket, cdf, writer)
+        if !foundMatch {
+            slidingWindowTx.HandleUnmatchedPacket(parsedPacket, cdf, writer)
+        }
+        slidingWindowMutex.Unlock()
+    }
+    close(source1Done)
+}()
 
-		foundMatch := slidingWindowTx.SearchSlidingWindow(parsedPacket, cdf, writer)
-		if !foundMatch {
-			slidingWindowRx.HandleUnmatchedPacket(parsedPacket, cdf, writer)
-			}
-		}
-	}
+// Process packets from source 2
+go func() {
+    for packet := range packetSource2.Packets() {
+        if packet.ErrorLayer() != nil {
+            fmt.Println(packet.ErrorLayer().Error())
+            continue
+        }
+        totalNrPackets++
+
+        ipLayer := packet.Layer(layers.LayerTypeIPv4)
+        if !checkIfRelevantPacket(packet) || ipLayer == nil {
+            continue
+        }
+        parsedPacket := packetlib.NewParsedPacket(packet, l4_protocol)
+
+        slidingWindowMutex.Lock()
+        foundMatch := slidingWindowTx.SearchSlidingWindow(parsedPacket, cdf, writer)
+        if !foundMatch {
+            slidingWindowRx.HandleUnmatchedPacket(parsedPacket, cdf, writer)
+        }
+        slidingWindowMutex.Unlock()
+    }
+    close(source2Done)
+}()
+
+// Wait for both sources to be exhausted
+for !(source1Exhausted && source2Exhausted) {
+    select {
+    case <-source1Done:
+        source1Exhausted = true
+    case <-source2Done:
+        source2Exhausted = true
+    }
+}
+
 	slidingWindowTx.EmptySlidingWindow(writer, cdf)
+
 	// slidingWindowRx.EmptySlidingWindow(writer, cdf)
 		
 	// Record the end time

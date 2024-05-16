@@ -47,7 +47,7 @@ func (slidingWindow SlidingWindow) IsWindowFull() bool {
 	return len(slidingWindow.Window) >= slidingWindow.WindowSize 
 }
 
-func (slidingWindow SlidingWindow) HandlePacketMatch(
+func (slidingWindow *SlidingWindow) HandlePacketMatch(
 	writer *csv.Writer,
 	packet *packetlib.ParsedPacket,
 	slidingWindowPacket *packetlib.ParsedPacket,
@@ -67,7 +67,7 @@ func (slidingWindow SlidingWindow) HandlePacketMatch(
 	packetInfo.WriteToCsv(writer)
 }
 
-func (slidingWindow SlidingWindow) EmptySlidingWindow(writer *csv.Writer, cdf []float32) {
+func (slidingWindow *SlidingWindow) EmptySlidingWindow(writer *csv.Writer, cdf []float32) {
 
 	for _, p := range slidingWindow.Window {
 		packet := csvlib.NewPacketInfo(p.SrcIp, p.DstIp, p.Psize, p.Psize, p.Ts, p.Ts, false)
@@ -82,7 +82,6 @@ func (slidingWindow *SlidingWindow) RemoveFromWindow(indexToRemove int) {
 	if indexToRemove < 0 || indexToRemove >= len(slidingWindow.Window) {
 		return
 	}
-
 	// Use append to create a new slice excluding the map at the specified index
 	slidingWindow.Window = append(slidingWindow.Window[:indexToRemove], slidingWindow.Window[indexToRemove+1:]...)
 }
